@@ -86,17 +86,8 @@ runs:
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
     # --- Windows Specific Steps ---
-    - name: Prepare Source SDK for Windows
-      if: runner.os == 'Windows'
-      run: |
-        # On Windows, the SDK build process usually involves running a batch file
-        # or opening a VS solution. './buildallprojects.bat' is common.
-        # This will set up necessary VS projects.
-        # Ensure Visual Studio build tools are available on the runner.
-        # GitHub's Windows runners usually come with Visual Studio pre-installed.
-        cd "${{ github.workspace }}/source-sdk-2013/src"
-        .\buildallprojects.bat
-      shell: cmd # Use cmd for batch files
+    # The "Prepare Source SDK for Windows" step is removed as it's often not needed
+    # when using CMake, and the previous version had issues with comments and file existence.
 
     - name: Configure CMake for Windows
       if: runner.os == 'Windows'
@@ -110,17 +101,11 @@ runs:
 
         # Configure CMake for a Release build targeting Windows.
         # CMake will automatically find Visual Studio if it's in the PATH.
-        # We specify the generator explicitly for clarity.
-        # The Source SDK usually builds 32-bit by default, but you can target x64.
-        # For Source SDK 2013, 32-bit is common for mods. If your plugin is 64-bit,
-        # you'll need to adjust your CMakeLists.txt and potentially the generator.
-        # For typical SDK 2013 (32-bit): "Visual Studio 17 2022"
-        # For 64-bit: "Visual Studio 17 2022" -A x64 (or similar, depending on CMake version)
         cmake -G "Visual Studio 17 2022" \
           -DCMAKE_BUILD_TYPE=Release \
           -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
           .. # Point to the parent directory where your CMakeLists.txt resides
-      shell: bash # Use bash to make path handling consistent, or cmd if preferred
+      shell: bash # Using bash is generally more robust for path handling in GHA on Windows
 
     - name: Build with CMake for Windows
       if: runner.os == 'Windows'
@@ -129,7 +114,6 @@ runs:
         cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_windows"
 
         # Build the project using CMake. CMake will invoke MSBuild.
-        # Use --config Release to build the Release configuration.
         cmake --build . --config Release
       shell: bash
 
@@ -138,8 +122,6 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
-        # Adjust this path to where your .dll file will be generated.
-        # Common paths are Release/*.dll or Debug/*.dll inside the build directory.
         path: |
           ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Release/*.dll
-          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll # Include debug in case build type is implicit
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll
