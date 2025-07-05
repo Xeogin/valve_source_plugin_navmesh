@@ -15,7 +15,6 @@ runs:
         path: ${{ inputs.repo-path }}
         repository: Xeogin/valve_source_plugin_navmesh
         token: ${{ github.token }}
-        # Keep sparse-checkout-cone-mode true here if your main plugin repo uses it
         ssh-strict: true
         ssh-user: git
         persist-credentials: true
@@ -40,7 +39,7 @@ runs:
         # --- IMPORTANT ---
         # Removed all sparse-checkout related options for the SDK checkout
         # to ensure a full clone of the 'src' directory.
-        # sparse-checkout-cone-mode: true # <-- THIS LINE MUST BE REMOVED/COMMENTED
+        # sparse-checkout-cone-mode: true # <-- THIS LINE MUST BE REMOVED/COMMENTED IF PRESENT IN YOUR FILE
         # sparse-checkout-paths: # <-- REMOVE THIS IF PRESENT
         fetch-depth: 1
         fetch-tags: false
@@ -49,6 +48,7 @@ runs:
         submodules: false
         set-safe-directory: true
 
+    # This step is for debugging on Windows to confirm the SDK checkout
     - name: Debug: List Source SDK 'src' contents (Windows)
       if: runner.os == 'Windows'
       run: |
