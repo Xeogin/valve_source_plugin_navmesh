@@ -43,14 +43,14 @@ runs:
         submodules: false
         set-safe-directory: true
 
-    - name: "List Source SDK src contents Windows"
+    - name: "List Source SDK src contents Windows (Initial Check)"
       if: runner.os == 'Windows'
       run: |
         echo "Attempting to list contents of src directory."
         dir "${{ github.workspace }}\source-sdk-2013\src"
       shell: cmd
 
-    # --- Linux Specific Steps ---
+    # --- Linux Specific Steps (no change) ---
     - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
@@ -88,7 +88,7 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
-    # --- Windows Specific Steps ---
+    # --- Windows Specific Steps (changes here) ---
     - name: Generate and Build Source SDK 2013 (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -101,20 +101,21 @@ runs:
         REM Run VPC to generate project and solution files
         createallprojects.bat
         
-        REM Build the 'everything.sln' solution.
-        msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /maxcpucount
+        REM Build the 'everything.sln' solution with detailed output.
+        REM Removed /maxcpucount to ensure all build messages are clearer.
+        msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /v:d
         
         REM Return to the previous directory
         POPD
       shell: cmd
 
-    - name: "Inspect Source SDK build output"
+    - name: "Inspect Source SDK x64 lib output (Crucial Step)"
       if: runner.os == 'Windows'
       run: |
-        echo "Listing contents of source-sdk-2013/src/lib/public (recursively):"
-        dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\" /s
-        echo "Listing contents of source-sdk-2013/src (recursively, looking for *.lib):"
-        dir "${{ github.workspace }}\source-sdk-2013\src\" /s /b *.lib
+        echo "Listing contents of source-sdk-2013/src/lib/public/x64:"
+        dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\x64"
+        echo "Listing ALL .lib files found recursively in source-sdk-2013/src/lib/public:"
+        dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\" /s /b *.lib
       shell: cmd
 
     - name: Configure CMake for Windows
