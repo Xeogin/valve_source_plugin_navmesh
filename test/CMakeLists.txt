@@ -6,8 +6,7 @@ target_compile_definitions(collisionutils PUBLIC ${shared_defs})
 set(PLUGIN_NAME plugin_navmesh)
 add_library(${PLUGIN_NAME} MODULE VSPlugin.cpp)
 
-# --- REMOVED: This line is redundant. link_directories in the parent handles this. ---
-# target_link_directories(${PLUGIN_NAME} PUBLIC ${HL2SDK_PUB_LIBS} ${HL2SDK_COM_LIBS})
+# Removed: Redundant target_link_directories; this is handled by 'link_directories' in the top-level CMakeLists.txt.
 
 target_link_options(${PLUGIN_NAME} PRIVATE ${my_link_options})
 
