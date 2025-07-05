@@ -11,6 +11,12 @@ target_compile_options(collisionutils PUBLIC ${my_compile_options})
 target_compile_definitions(collisionutils PUBLIC ${shared_defs})
 
 set(PLUGIN_NAME plugin_navmesh)
+# IMPORTANT POTENTIAL ISSUE:
+# If 'plugin_navmesh' is also defined as a target (e.g., using 'add_library' or 'add_executable')
+# in your top-level CMakeLists.txt or another subdirectory, this line will cause a
+# "target already exists" error. Typically, a main plugin target is defined once,
+# usually at the top level, and subdirectories might add sources or define *their own*
+# sub-libraries/executables that the main plugin links against.
 add_library(${PLUGIN_NAME} MODULE VSPlugin.cpp)
 
 # Link directories for Source SDK libraries.
@@ -29,7 +35,9 @@ target_link_directories(${PLUGIN_NAME} PUBLIC
 
 target_link_options(${PLUGIN_NAME} PRIVATE ${my_link_options})
 
+# --- FIX: Changed to use the keyword signature (PRIVATE) ---
 target_link_libraries(${PLUGIN_NAME}
+    PRIVATE # <-- ADDED THIS KEYWORD HERE TO ENSURE CONSISTENCY
     # These dependencies should be defined and built by your other add_subdirectory calls
     # (e.g., plugin_util, valve_navmesh) or come from the SDK itself.
     valve_navmesh
