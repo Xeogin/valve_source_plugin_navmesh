@@ -24,28 +24,23 @@ jobs:
         repo-path: valve_source_plugin_navmesh
 
     # --- ARTIFACT UPLOAD STEPS ---
+    # These are the ONLY artifact upload steps that should be in this file.
 
     - name: Upload Linux Build Artifact
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        # MOST LIKELY CORRECT PATH for Linux:
-        # Based on previous logs, 'libplugin_navmesh.so' is the name.
-        # If 'build/test/Release/' and 'build/Release/' didn't work,
-        # it's often placed directly in the 'build' directory by default on Linux for shared libs.
-        path: ${{github.workspace}}/build/libplugin_navmesh.so
-        # IF THIS STILL FAILS FOR LINUX:
-        # You MUST check the 'Build' step logs for the 'ubuntu-latest' job one last time.
-        # Look for the exact absolute path where 'libplugin_navmesh.so' is created.
-        # Example: 'Linking CXX shared module /home/runner/work/.../build/SOME_SUBDIR/libplugin_navmesh.so'
+        # CORRECTED PATH for Linux:
+        # Based on logs and matching Windows structure (without 'Release/').
+        path: ${{github.workspace}}/build/test/libplugin_navmesh.so
 
     - name: Upload Windows Build Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
-        # CONFIRMED CORRECT PATH for Windows from your previous logs:
+        # CONFIRMED CORRECT PATH for Windows:
         path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
 
     # --- END ARTIFACT UPLOAD STEPS ---
