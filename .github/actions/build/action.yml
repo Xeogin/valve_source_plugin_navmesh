@@ -102,8 +102,6 @@ runs:
         createallprojects.bat
         
         REM Build the 'everything.sln' solution.
-        REM MSBuild should now be in the PATH due to vcvars64.bat.
-        REM Ensure platform is x64 for a 64-bit build.
         msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /maxcpucount
         
         REM Return to the previous directory
@@ -113,28 +111,28 @@ runs:
     - name: Configure CMake for Windows
       if: runner.os == 'Windows'
       run: |
-        REM Ensure you are in your plugin's directory for CMake configuration
+        # Ensure you are in your plugin's directory for CMake configuration
         cd "${{ github.workspace }}/${{ inputs.repo-path }}"
 
-        REM Create a build directory if it doesn't exist
+        # Create a build directory if it doesn't exist
         mkdir -p build_windows
         cd build_windows
 
-        REM Configure CMake for a Release build targeting Windows.
-        REM CMake will automatically find Visual Studio if it's in the PATH.
+        # Configure CMake for a Release build targeting Windows.
+        # CMake will automatically find Visual Studio if it's in the PATH.
         cmake -G "Visual Studio 17 2022" \
           -DCMAKE_BUILD_TYPE=Release \
           -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
-          .. REM Point to the parent directory where your CMakeLists.txt resides
+          .. # Point to the parent directory where your CMakeLists.txt resides
       shell: bash
 
     - name: Build with CMake for Windows
       if: runner.os == 'Windows'
       run: |
-        REM Navigate to the build directory created in the previous step
+        # Navigate to the build directory created in the previous step
         cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_windows"
 
-        REM Build the project using CMake. CMake will invoke MSBuild.
+        # Build the project using CMake. CMake will invoke MSBuild.
         cmake --build . --config Release
       shell: bash
 
