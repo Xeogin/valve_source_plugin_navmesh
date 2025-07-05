@@ -3,7 +3,7 @@ name: CMake
 on:
   push:
     branches: [ master ]
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual triggering from GitHub UI
   pull_request:
     branches: [ master ]
 
@@ -17,27 +17,38 @@ jobs:
     - uses: actions/checkout@v4
       with:
         path: valve_source_plugin_navmesh
+
     - name: Checkout and Build project
       uses: ./valve_source_plugin_navmesh/.github/actions/build
       with:
         repo-path: valve_source_plugin_navmesh
 
-    # --- ARTIFACT UPLOAD STEPS (UPDATED PATHS) ---
+    # --- ARTIFACT UPLOAD STEPS ---
+
     - name: Upload Linux Build Artifact
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        # Corrected path and filename for Linux
-        path: ${{github.workspace}}/build/test/Release/libplugin_navmesh.so
+        # MOST LIKELY CORRECT PATH for Linux:
+        # Based on previous logs, 'libplugin_navmesh.so' is the name.
+        # If 'build/test/Release/' and 'build/Release/' didn't work,
+        # it's often placed directly in the 'build' directory by default on Linux for shared libs.
+        path: ${{github.workspace}}/build/libplugin_navmesh.so
+        # IF THIS STILL FAILS FOR LINUX:
+        # You MUST check the 'Build' step logs for the 'ubuntu-latest' job one last time.
+        # Look for the exact absolute path where 'libplugin_navmesh.so' is created.
+        # Example: 'Linking CXX shared module /home/runner/work/.../build/SOME_SUBDIR/libplugin_navmesh.so'
 
     - name: Upload Windows Build Artifact
-          if: runner.os == 'Windows'
-          uses: actions/upload-artifact@v4
-          with:
-            name: navmesh-plugin-windows
-            # CORRECTED PATH FOR WINDOWS:
-            path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-windows
+        # CONFIRMED CORRECT PATH for Windows from your previous logs:
+        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+
+    # --- END ARTIFACT UPLOAD STEPS ---
 
     - name: Test
       working-directory: ${{github.workspace}}/build
