@@ -18,14 +18,12 @@ jobs:
       with:
         path: valve_source_plugin_navmesh
 
-    # --- ADD THIS NEW STEP HERE ---
     - name: Install 32-bit build dependencies (Linux)
       if: runner.os == 'Linux' # Only run this step on the Linux runner
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc-multilib g++-multilib libc6-dev-i386
       shell: bash
-    # --- END NEW STEP ---
 
     - name: Checkout and Build project # This step now handles BOTH building and uploading via action.yml
       uses: ./valve_source_plugin_navmesh/.github/actions/build
