@@ -18,17 +18,25 @@ runs:
       run: |
         # Build the base cmake command
         cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}"
-
+        
         # Add 32-bit flags specifically for Linux compilation
         if [ "${{ runner.os }}" == "Linux" ]; then
           cmake_command+=" -DCMAKE_C_FLAGS=\"-m32\" -DCMAKE_CXX_FLAGS=\"-m32\""
         fi
-
+        
         # Execute the full cmake command
         eval "$cmake_command"
       env:
         BUILD_TYPE: Release
       shell: bash
+
+    # --- ADD THIS MISSING BUILD STEP HERE ---
+    - name: Build Project
+      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
+      env:
+        BUILD_TYPE: Release
+      shell: bash
+    # --- END MISSING BUILD STEP ---
 
     # --- FINAL ARTIFACT UPLOAD STEPS (with original names) ---
 
