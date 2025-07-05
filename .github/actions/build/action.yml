@@ -11,7 +11,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: alliedmodders/hl2sdk      
-        ref: tf2_sdk2013
+        ref: hl2dm
         path: hl2sdk
         
     - name: Configure CMake
