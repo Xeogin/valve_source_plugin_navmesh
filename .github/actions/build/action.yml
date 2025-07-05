@@ -43,7 +43,7 @@ runs:
         submodules: false
         set-safe-directory: true
 
-    - name: "List Source SDK src contents Windows" # <-- MODIFIED LINE 46: Removed "Debug:"
+    - name: "List Source SDK src contents Windows"
       if: runner.os == 'Windows'
       run: |
         echo "Attempting to list contents of src directory."
@@ -88,51 +88,51 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
-    # --- Windows Specific Steps (Still Commented Out) ---
-    # - name: Build Source SDK 2013 Libraries (Windows)
-    #   if: runner.os == 'Windows'
-    #   run: |
-    #     REM Set up the Visual Studio build environment and then run MSBuild
-    #     "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
-    #         pushd "${{ github.workspace }}\source-sdk-2013\src" && (
-    #             msbuild.exe "VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
-    #         ) && popd
-    #     )
-    #   shell: cmd
-#
-#    - name: Configure CMake for Windows
-#      if: runner.os == 'Windows'
-#      run: |
-#        # Ensure you are in your plugin's directory for CMake configuration
-#        cd "${{ github.workspace }}/${{ inputs.repo-path }}"
-#
-#        # Create a build directory if it doesn't exist
-#        mkdir -p build_windows
-#        cd build_windows
-#
-#        # Configure CMake for a Release build targeting Windows.
-#        # CMake will automatically find Visual Studio if it's in the PATH.
-#        cmake -G "Visual Studio 17 2022" \
-#          -DCMAKE_BUILD_TYPE=Release \
-#          -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
-#          .. # Point to the parent directory where your CMakeLists.txt resides
-#      shell: bash
-#
-#    - name: Build with CMake for Windows
-#      if: runner.os == 'Windows'
-#      run: |
-#        # Navigate to the build directory created in the previous step
-#        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_windows"
-#
-#        # Build the project using CMake. CMake will invoke MSBuild.
-#        cmake --build . --config Release
-#      shell: bash
-#
-#    - name: Upload Windows Artifact
-#      if: runner.os == 'Windows'
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: navmesh-plugin-windows
-#        path: |
-#          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Release/*.dll
-#          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll
+    # --- Windows Specific Steps ---
+    - name: Build Source SDK 2013 Libraries (Windows) # <-- UNCOMMENTED THIS
+      if: runner.os == 'Windows'
+      run: |
+        REM Set up the Visual Studio build environment and then run MSBuild
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
+            pushd "${{ github.workspace }}\source-sdk-2013\src" && (
+                msbuild.exe "VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
+            ) && popd
+        )
+      shell: cmd
+
+    - name: Configure CMake for Windows # <-- UNCOMMENTED THIS
+      if: runner.os == 'Windows'
+      run: |
+        # Ensure you are in your plugin's directory for CMake configuration
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}"
+
+        # Create a build directory if it doesn't exist
+        mkdir -p build_windows
+        cd build_windows
+
+        # Configure CMake for a Release build targeting Windows.
+        # CMake will automatically find Visual Studio if it's in the PATH.
+        cmake -G "Visual Studio 17 2022" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
+          .. # Point to the parent directory where your CMakeLists.txt resides
+      shell: bash
+
+    - name: Build with CMake for Windows # <-- UNCOMMENTED THIS
+      if: runner.os == 'Windows'
+      run: |
+        # Navigate to the build directory created in the previous step
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_windows"
+
+        # Build the project using CMake. CMake will invoke MSBuild.
+        cmake --build . --config Release
+      shell: bash
+
+    - name: Upload Windows Artifact # <-- UNCOMMENTED THIS
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-windows
+        path: |
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Release/*.dll
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll
