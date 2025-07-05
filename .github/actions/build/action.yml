@@ -224,5 +224,5 @@ runs:
       with:
         name: navmesh-plugin-windows
         path: |
-          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Release/*.dll
-          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Release/*.dll # <--- MODIFIED LINE
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Debug/*.dll  # <--- MODIFIED LINE
