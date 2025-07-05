@@ -50,12 +50,16 @@ runs:
         dir "${{ github.workspace }}\source-sdk-2013\src"
       shell: cmd
 
-    # --- Linux Specific Steps (no change) ---
+    # --- Linux Specific Steps ---
     - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
+        
+        # Ensure the ccache directory exists for podman/docker mounts
+        mkdir -p ~/.ccache 
+
         cd "${{github.workspace}}/source-sdk-2013/src"
         ./buildallprojects
       shell: bash
