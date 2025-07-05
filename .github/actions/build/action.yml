@@ -1,30 +1,51 @@
-name: 'Build'
-description: 'Builds the Nav Mesh Project'
+name: 'Build Valve Source Plugin Navmesh'
+description: 'Builds the valve_source_plugin_navmesh for various platforms'
 inputs:
   repo-path:
-    description: 'Path to the plugin project source'
+    description: 'Path to the valve_source_plugin_navmesh repository within the workspace'
     required: true
+    default: 'valve_source_plugin_navmesh' # Default to the cloned directory name
+
 runs:
   using: "composite"
   steps:
-    # Remove the old Allied Modders HL2SDK checkout.
-    # - name: Checkout HL2SDK from Allied Modders
-    #   uses: actions/checkout@v4
-    #   with:
-    #     repository: alliedmodders/hl2sdk
-    #     ref: hl2dm
-    #     path: hl2sdk
+    - name: Checkout valve_source_plugin_navmesh
+      uses: actions/checkout@v4
+      with:
+        path: ${{ inputs.repo-path }}
+        repository: Xeogin/valve_source_plugin_navmesh # Ensure this is your repository
+        token: ${{ github.token }} # Use GITHUB_TOKEN for cloning
+        ssh-strict: true
+        ssh-user: git
+        persist-credentials: true
+        clean: true
+        sparse-checkout-cone-mode: true
+        fetch-depth: 1
+        fetch-tags: false
+        show-progress: true
+        lfs: false
+        submodules: false
+        set-safe-directory: true
 
-    # NEW: Checkout Valve's official Source SDK 2013 (Multiplayer branch)
-    - name: Checkout Valve Source SDK 2013
+    - name: Checkout Source SDK 2013
       uses: actions/checkout@v4
       with:
         repository: ValveSoftware/source-sdk-2013
-        ref: master # Or 'mp' branch if you prefer, 'master' is usually the latest for MP
-        path: source-sdk-2013 # This will be the path to the SDK
+        ref: master
+        path: source-sdk-2013 # This will put the SDK in a sibling directory to your plugin
+        token: ${{ github.token }} # Use GITHUB_TOKEN for cloning
+        ssh-strict: true
+        ssh-user: git
+        persist-credentials: true
+        clean: true
+        sparse-checkout-cone-mode: true
+        fetch-depth: 1
+        fetch-tags: false
+        show-progress: true
+        lfs: false
+        submodules: false
+        set-safe-directory: true
 
-    # NEW: Prepare the Source SDK for 64-bit Linux compilation
-    # This involves installing multilibs and running SDK's build scripts
     - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
@@ -34,7 +55,8 @@ runs:
         sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
 
         # Navigate to the SDK's multiplayer source directory
-        cd ${{github.workspace}}/source-sdk-2013/mp/src
+        # CORRECTED PATH: The 'src' directory is directly under the checked out SDK root.
+        cd "${{github.workspace}}/source-sdk-2013/src"
 
         # Run the SDK's build scripts to generate Makefiles/project files for Linux
         # This is CRUCIAL for setting up the SDK's own build environment for 64-bit.
@@ -43,47 +65,38 @@ runs:
         # You might also need to run ./creategameprojects if your plugin is a game module
       shell: bash
 
-    # Debug step (optional, but good to verify SDK's own libraries)
-    - name: Debug - List Source SDK Linux64 Libraries
-      if: runner.os == 'Linux'
-      run: |
-        echo "Listing contents of source-sdk-2013/bin/linux64:"
-        ls -l ${{github.workspace}}/source-sdk-2013/bin/linux64/ || true
-        echo ""
-        echo "Listing contents of source-sdk-2013/mp/bin/linux64:"
-        ls -l ${{github.workspace}}/source-sdk-2013/mp/bin/linux64/ || true
-      shell: bash
-
     - name: Configure CMake
       run: |
-        # Pass the Source SDK path to CMake
-        # Your CMakeLists.txt will need to use this variable to find SDK headers and libraries.
-        cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DSOURCEMOD_PATH=\"${{github.workspace}}/sourcemod\" \ # If your plugin uses SourceMod
-          -DSOURCE_SDK_PATH=\"${{github.workspace}}/source-sdk-2013\" \
-          -DCMAKE_CXX_FLAGS=\"-m64\" -DCMAKE_C_FLAGS=\"-m64\"" # Explicitly target 64-bit
-        eval "$cmake_command"
-      env:
-        BUILD_TYPE: Release
+        # Ensure you are in your plugin's directory for CMake configuration
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}"
+        
+        # Create a build directory if it doesn't exist
+        mkdir -p build_linux
+        cd build_linux
+
+        # Configure CMake for a Release build targeting 64-bit Linux.
+        # Set CMAKE_TOOLCHAIN_FILE to use Valve's Linux toolchain from the SDK.
+        # Point CMAKE_BUILD_TYPE to Release for optimized builds.
+        # Define SOURCE_SDK_PATH to the checked out Source SDK.
+        cmake \
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/source-sdk-2013/linux_tools/linux_gcc_64.cmake" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
+          .. # Point to the parent directory where your CMakeLists.txt resides
       shell: bash
 
-    - name: Build Project
-      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
-      env:
-        BUILD_TYPE: Release
+    - name: Build with CMake
+      run: |
+        # Navigate to the build directory created in the previous step
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_linux"
+
+        # Build the project using CMake. -j will use all available cores for faster compilation.
+        cmake --build . -j $(nproc)
       shell: bash
 
-    - name: Upload Linux Plugin Artifact
-      if: runner.os == 'Linux'
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        path: ${{github.workspace}}/build/test/libplugin_navmesh.so # Adjust path if output changes
-
-    - name: Upload Windows Plugin Artifact
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: navmesh-plugin-windows
-        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll # Adjust path if output changes
+        path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so # Adjust to capture your compiled .so file
+        # You might want to include debug symbols or other relevant files here.
