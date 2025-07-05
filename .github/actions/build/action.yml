@@ -48,17 +48,12 @@ runs:
         submodules: false
         set-safe-directory: true
 
-    # This step is for debugging on Windows to confirm the SDK checkout
+    # Simplified Debug Step for Windows - if this works, the issue was in the 'dir' or 'pushd/popd' lines
     - name: Debug: List Source SDK 'src' contents (Windows)
       if: runner.os == 'Windows'
       run: |
-        REM Navigate to the SDK's src directory
-        pushd "${{ github.workspace }}\source-sdk-2013\src"
-        REM List all files and directories recursively
-        dir /s
-        REM List only .sln files
-        dir *.sln
-        popd
+        echo "Attempting to list contents of src directory."
+        dir "${{ github.workspace }}\source-sdk-2013\src"
       shell: cmd
 
     # --- Linux Specific Steps ---
