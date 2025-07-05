@@ -32,13 +32,12 @@ jobs:
         path: ${{github.workspace}}/build/test/Release/libplugin_navmesh.so
 
     - name: Upload Windows Build Artifact
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: navmesh-plugin-windows
-        # Corrected path and filename for Windows
-        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
-    # --- END OF ARTIFACT UPLOAD STEPS ---
+          if: runner.os == 'Windows'
+          uses: actions/upload-artifact@v4
+          with:
+            name: navmesh-plugin-windows
+            # CORRECTED PATH FOR WINDOWS:
+            path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
 
     - name: Test
       working-directory: ${{github.workspace}}/build
