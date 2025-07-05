@@ -35,7 +35,8 @@ list(APPEND shared_includes
     "${HL2SDK_DIR}/src/public/engine"     # Added for IEngineTrace.h, ivdebugoverlay.h
     "${HL2SDK_DIR}/src/public/game/server" # Added for iplayerinfo.h (common location)
     "${HL2SDK_DIR}/src/public/player"      # Another possible location for iplayerinfo.h
-    "${HL2SDK_DIR}/src/public/game"        # Added for GameEventListener.h
+    "${HL2SDK_DIR}/src/public/game"
+    "${HL2SDK_DIR}/src/game/shared" # <--- ADDED THIS LINE: Very common SDK include path
 )
 # Make these globally available for all source files in the project
 include_directories(${shared_includes})
