@@ -43,7 +43,7 @@ runs:
         submodules: false
         set-safe-directory: true
 
-    - name: Debug: List Source SDK 'src' contents (Windows)
+    - name: "List Source SDK src contents Windows" # <-- MODIFIED LINE 46: Removed "Debug:"
       if: runner.os == 'Windows'
       run: |
         echo "Attempting to list contents of src directory."
@@ -51,7 +51,7 @@ runs:
       shell: cmd
 
     # --- Linux Specific Steps ---
-    - name: Prepare Source SDK for Linux (64-bit) # <-- UNCOMMENTED THIS
+    - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
