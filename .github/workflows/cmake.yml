@@ -18,32 +18,12 @@ jobs:
       with:
         path: valve_source_plugin_navmesh
 
-    - name: Checkout and Build project
+    - name: Checkout and Build project # This step now handles BOTH building and uploading via action.yml
       uses: ./valve_source_plugin_navmesh/.github/actions/build
       with:
         repo-path: valve_source_plugin_navmesh
 
-    # --- ARTIFACT UPLOAD STEPS ---
-    # These are the ONLY artifact upload steps that should be in this file.
-
-    - name: Upload Linux Build Artifact
-      if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v4
-      with:
-        name: navmesh-plugin-linux
-        # CORRECTED PATH for Linux:
-        # Based on logs and matching Windows structure (without 'Release/').
-        path: ${{github.workspace}}/build/test/libplugin_navmesh.so
-
-    - name: Upload Windows Build Artifact
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: navmesh-plugin-windows
-        # CONFIRMED CORRECT PATH for Windows:
-        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
-
-    # --- END ARTIFACT UPLOAD STEPS ---
+    # NO UPLOAD-ARTIFACT STEPS HERE - they are handled by .github/actions/build/action.yml
 
     - name: Test
       working-directory: ${{github.workspace}}/build
