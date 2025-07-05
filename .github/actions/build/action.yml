@@ -108,6 +108,15 @@ runs:
         POPD
       shell: cmd
 
+    - name: "Inspect Source SDK build output"
+      if: runner.os == 'Windows'
+      run: |
+        echo "Listing contents of source-sdk-2013/src/lib/public (recursively):"
+        dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\" /s
+        echo "Listing contents of source-sdk-2013/src (recursively, looking for *.lib):"
+        dir "${{ github.workspace }}\source-sdk-2013\src\" /s /b *.lib
+      shell: cmd
+
     - name: Configure CMake for Windows
       if: runner.os == 'Windows'
       run: |
