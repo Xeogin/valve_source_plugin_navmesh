@@ -90,8 +90,11 @@ runs:
       if: runner.os == 'Windows'
       run: |
         REM Set up the Visual Studio build environment and then run MSBuild
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
-        msbuild.exe "${{ github.workspace }}\source-sdk-2013\src\VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
+            pushd "${{ github.workspace }}\source-sdk-2013\src" && (
+                msbuild.exe "VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
+            ) && popd
+        )
       shell: cmd # Crucial to use cmd for vcvarsall.bat and msbuild to ensure environment is set correctly
 
     - name: Configure CMake for Windows
