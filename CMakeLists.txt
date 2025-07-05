@@ -47,13 +47,10 @@ if (LINUX)
 
 else() # This block applies to Windows
     # Windows specific SDK library paths
-    # The build in the action.yml produces libraries in this structure:
-    # <SDK_ROOT>/src/lib/public/<Platform>/<Configuration>/
-    # Where <Platform> is "x64" and <Configuration> is "Release" (from the msbuild call)
-    set(SDK_PUBLIC_LIB_PATH "${HL2SDK_DIR}/src/lib/public/${CMAKE_VS_PLATFORM_NAME}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
-    # Some older or common libraries might be in src/lib/public directly
-    set(SDK_COMMON_LIB_PATH "${HL2SDK_DIR}/src/lib/public/") # General public path
-    # If there are common libs outside of public, e.g., src/lib/common/<platform>/<config>, add them here too.
+    # BASED ON YOUR LOG: The libraries are directly under x64, not in a Release/Debug subfolder.
+    set(SDK_PUBLIC_LIB_PATH "${HL2SDK_DIR}/src/lib/public/${CMAKE_VS_PLATFORM_NAME}")
+    # Set SDK_COMMON_LIB_PATH to the same for now, or remove if not needed.
+    set(SDK_COMMON_LIB_PATH "${HL2SDK_DIR}/src/lib/public/${CMAKE_VS_PLATFORM_NAME}") 
 
     set(my_compile_options
         $<$<CONFIG:>:/MT>
@@ -81,8 +78,6 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 link_directories(
     "${SDK_PUBLIC_LIB_PATH}"
     "${SDK_COMMON_LIB_PATH}"
-    # You might also need to add the parent directory of these if libraries are directly in 'lib/public' or 'lib/common'
-    # Example: "${HL2SDK_DIR}/src/lib/public"
 )
 
 # Find specific SDK libraries
