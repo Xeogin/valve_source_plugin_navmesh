@@ -34,11 +34,9 @@ runs:
         ref: master
         path: source-sdk-2013
         token: ${{ github.token }}
-        ssh-strict: true
-        ssh-user: git
         persist-credentials: true
         clean: true
-        sparse-checkout-cone-mode: true
+        # Removed sparse-checkout-cone-mode to ensure VSSDK2013.sln is present
         fetch-depth: 1
         fetch-tags: false
         show-progress: true
