@@ -7,29 +7,62 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout HL2SDK from Allied Modders
+    # Remove the old Allied Modders HL2SDK checkout.
+    # - name: Checkout HL2SDK from Allied Modders
+    #   uses: actions/checkout@v4
+    #   with:
+    #     repository: alliedmodders/hl2sdk
+    #     ref: hl2dm
+    #     path: hl2sdk
+
+    # NEW: Checkout Valve's official Source SDK 2013 (Multiplayer branch)
+    - name: Checkout Valve Source SDK 2013
       uses: actions/checkout@v4
       with:
-        repository: alliedmodders/hl2sdk
-        ref: hl2dm
-        path: hl2sdk # HL2SDK will be checked out here, relative to the composite action's CWD
+        repository: ValveSoftware/source-sdk-2013
+        ref: master # Or 'mp' branch if you prefer, 'master' is usually the latest for MP
+        path: source-sdk-2013 # This will be the path to the SDK
 
-    # UPDATED DEBUG STEP FOR 64-BIT (NON-FAILING)
-    # Corrected path by removing ${{github.workspace}} inside the `run` block
-    - name: Debug - List HL2SDK Linux64 Libraries
+    # NEW: Prepare the Source SDK for 64-bit Linux compilation
+    # This involves installing multilibs and running SDK's build scripts
+    - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
-        echo "Listing contents of hl2sdk/lib/public/linux64:"
-        ls -l hl2sdk/lib/public/linux64/ || true # Path is now relative to action's CWD
+        sudo apt-get update
+        # Install 64-bit build tools and 32-bit compatibility libraries (multilib)
+        # The Source SDK often needs these for its own build process or for linking against older components.
+        sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
+
+        # Navigate to the SDK's multiplayer source directory
+        cd ${{github.workspace}}/source-sdk-2013/mp/src
+
+        # Run the SDK's build scripts to generate Makefiles/project files for Linux
+        # This is CRUCIAL for setting up the SDK's own build environment for 64-bit.
+        # The 'buildallprojects' script typically handles both 32-bit and 64-bit.
+        ./buildallprojects # This script sets up the build environment for the SDK itself
+        # You might also need to run ./creategameprojects if your plugin is a game module
+      shell: bash
+
+    # Debug step (optional, but good to verify SDK's own libraries)
+    - name: Debug - List Source SDK Linux64 Libraries
+      if: runner.os == 'Linux'
+      run: |
+        echo "Listing contents of source-sdk-2013/bin/linux64:"
+        ls -l ${{github.workspace}}/source-sdk-2013/bin/linux64/ || true
         echo ""
-        echo "Listing contents of hl2sdk/lib/common/linux64:"
-        ls -l hl2sdk/lib/common/linux64/ || true # Path is now relative to action's CWD
+        echo "Listing contents of source-sdk-2013/mp/bin/linux64:"
+        ls -l ${{github.workspace}}/source-sdk-2013/mp/bin/linux64/ || true
       shell: bash
 
     - name: Configure CMake
       run: |
-        # Use full paths for CMake commands as they are relative to the main workflow's workspace
-        cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}"
+        # Pass the Source SDK path to CMake
+        # Your CMakeLists.txt will need to use this variable to find SDK headers and libraries.
+        cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DSOURCEMOD_PATH=\"${{github.workspace}}/sourcemod\" \ # If your plugin uses SourceMod
+          -DSOURCE_SDK_PATH=\"${{github.workspace}}/source-sdk-2013\" \
+          -DCMAKE_CXX_FLAGS=\"-m64\" -DCMAKE_C_FLAGS=\"-m64\"" # Explicitly target 64-bit
         eval "$cmake_command"
       env:
         BUILD_TYPE: Release
@@ -46,11 +79,11 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        path: ${{github.workspace}}/build/test/libplugin_navmesh.so
+        path: ${{github.workspace}}/build/test/libplugin_navmesh.so # Adjust path if output changes
 
     - name: Upload Windows Plugin Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
-        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll # Adjust path if output changes
