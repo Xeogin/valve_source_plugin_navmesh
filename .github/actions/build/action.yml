@@ -15,11 +15,12 @@ runs:
         path: ${{ inputs.repo-path }}
         repository: Xeogin/valve_source_plugin_navmesh
         token: ${{ github.token }}
+        # Keep sparse-checkout-cone-mode true here if your main plugin repo uses it
         ssh-strict: true
         ssh-user: git
         persist-credentials: true
         clean: true
-        sparse-checkout-cone-mode: true
+        sparse-checkout-cone-mode: true # KEEP this if you need it for your main repo
         fetch-depth: 1
         fetch-tags: false
         show-progress: true
@@ -36,13 +37,29 @@ runs:
         token: ${{ github.token }}
         persist-credentials: true
         clean: true
-        # Removed sparse-checkout-cone-mode to ensure VSSDK2013.sln is present
+        # --- IMPORTANT ---
+        # Removed all sparse-checkout related options for the SDK checkout
+        # to ensure a full clone of the 'src' directory.
+        # sparse-checkout-cone-mode: true # <-- THIS LINE MUST BE REMOVED/COMMENTED
+        # sparse-checkout-paths: # <-- REMOVE THIS IF PRESENT
         fetch-depth: 1
         fetch-tags: false
         show-progress: true
         lfs: false
         submodules: false
         set-safe-directory: true
+
+    - name: Debug: List Source SDK 'src' contents (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        REM Navigate to the SDK's src directory
+        pushd "${{ github.workspace }}\source-sdk-2013\src"
+        REM List all files and directories recursively
+        dir /s
+        REM List only .sln files
+        dir *.sln
+        popd
+      shell: cmd
 
     # --- Linux Specific Steps ---
     - name: Prepare Source SDK for Linux (64-bit)
