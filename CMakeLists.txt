@@ -23,6 +23,22 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     list(APPEND shared_defs GNUC) # GNUC is often important for Source SDK
 endif()
 
+# --- START: MODIFIED SECTION FOR SHARED INCLUDES ---
+# Define Source SDK include directories to be used by all targets
+list(APPEND shared_includes
+    "${HL2SDK_DIR}/src/public"
+    "${HL2SDK_DIR}/src/public/tier0"
+    "${HL2SDK_DIR}/src/public/tier1"
+    "${HL2SDK_DIR}/src/common"
+    "${HL2SDK_DIR}/src/public/mathlib" # Added for vector.h, matrix.h, etc.
+    "${HL2SDK_DIR}/src/public/vgui"    # Added for Color.h, etc.
+    # Add any other frequently used SDK include paths here
+)
+# Make these globally available for all source files in the project
+include_directories(${shared_includes})
+# --- END: MODIFIED SECTION FOR SHARED INCLUDES ---
+
+
 if (LINUX)
     set (tier1 :tier1.a)
     set (mathlib :mathlib.a)
@@ -57,10 +73,11 @@ else() # This block applies to Windows
     set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
 endif ()
 
-# Set global include directories
-include_directories(${shared_includes})
 
 # Add source files from subdirectories
+# CMake's 'include_directories' command above makes these paths available globally.
+# However, for stricter modern CMake, you'd use target_include_directories on each specific target,
+# passing ${shared_includes} to them. For now, this global include_directories should work.
 add_subdirectory(${PROJECT_SOURCE_DIR}/util)
 add_subdirectory(${PROJECT_SOURCE_DIR}/nav_mesh)
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
@@ -115,5 +132,4 @@ if (LINUX)
     target_link_libraries(plugin_navmesh PUBLIC dl) # For dlopen/dlsym
 endif()
 
-# Set global include directories (re-added here as a reminder, good practice to keep them at the top)
-# include_directories(${shared_includes}) # This was already present, just ensure it's still there.
+# Removed redundant 'include_directories(${shared_includes})' comment
