@@ -120,6 +120,16 @@ runs:
         POPD
       shell: cmd
 
+    # New diagnostic step here to check *after* the previous step finishes
+    - name: "Verify .vcxproj files after Generation step (Windows)"
+      if: runner.os == 'Windows'
+      run: |
+        echo "Checking for .vcxproj files in ${{ github.workspace }}\source-sdk-2013\src after the Generation step completes:"
+        dir "${{ github.workspace }}\source-sdk-2013\src\*.vcxproj"
+        echo "Checking for everything.sln in ${{ github.workspace }}\source-sdk-2013\src after the Generation step completes:"
+        dir "${{ github.workspace }}\source-sdk-2013\src\everything.sln"
+      shell: cmd # Important to use cmd for Windows `dir` command
+
     - name: Build Source SDK 2013 Libraries (Windows)
       if: runner.os == 'Windows'
       run: |
