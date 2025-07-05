@@ -2,11 +2,19 @@
 # project compiles directly. The paths must point to the actual files in Valve's repo.
 # The 'src/public' prefix is crucial for ValveSoftware/source-sdk-2013.
 add_library(collisionutils STATIC ${HL2SDK_DIR}/src/public/collisionutils.cpp) # Added STATIC to ensure a library is created
+
+# --- START: MODIFIED SECTION for collisionutils includes ---
 target_include_directories(collisionutils PRIVATE
-    ${HL2SDK_DIR}/src/public
-    ${HL2SDK_DIR}/src/public/tier0
-    ${HL2SDK_DIR}/src/public/tier1
+    # Explicitly add the necessary SDK include paths, or use shared_includes
+    # Using shared_includes is cleaner if it already contains all necessary paths
+    ${shared_includes}
+    # You had these explicitly, which is fine, but redundant if in shared_includes:
+    # ${HL2SDK_DIR}/src/public
+    # ${HL2SDK_DIR}/src/public/tier0
+    # ${HL2SDK_DIR}/src/public/tier1
 )
+# --- END: MODIFIED SECTION for collisionutils includes ---
+
 target_compile_options(collisionutils PUBLIC ${my_compile_options})
 target_compile_definitions(collisionutils PUBLIC ${shared_defs})
 
@@ -18,6 +26,13 @@ set(PLUGIN_NAME plugin_navmesh)
 # usually at the top level, and subdirectories might add sources or define *their own*
 # sub-libraries/executables that the main plugin links against.
 add_library(${PLUGIN_NAME} MODULE VSPlugin.cpp)
+
+# --- START: MODIFIED SECTION for plugin_navmesh includes ---
+# Add include directories for the main plugin target defined in this file
+target_include_directories(${PLUGIN_NAME} PRIVATE
+    ${shared_includes}
+)
+# --- END: MODIFIED SECTION for plugin_navmesh includes ---
 
 # Link directories for Source SDK libraries.
 # These paths need to be where the *compiled* SDK libraries reside.
