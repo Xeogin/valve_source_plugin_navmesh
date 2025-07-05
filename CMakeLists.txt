@@ -5,6 +5,25 @@ project(valve_source_plugin_navmesh)
 set(my_compile_options -g -Wall)
 set(shared_defs PLUGIN_EXPORTS)
 
+# Add platform-specific definitions
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-D_LINUX)
+    # Use CMAKE_SIZEOF_VOID_P to determine 32-bit or 64-bit for Source SDK definitions
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        add_definitions(-D_X64) # Define for 64-bit Linux
+        add_definitions(-DCOMPILER_GCC) # Explicitly define GCC compiler
+    elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+        add_definitions(-D_X32) # Define for 32-bit Linux
+        add_definitions(-DCOMPILER_GCC) # Explicitly define GCC compiler
+    endif()
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    add_definitions(-D_WIN32)
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        add_definitions(-D_WIN64) # Define for 64-bit Windows
+    endif()
+    add_definitions(-DCOMPILER_MSVC) # Explicitly define MSVC compiler
+endif()
+
 # Define output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -15,16 +34,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # to your 'valve_source_plugin_navmesh' project folder in the workspace root.
 # For example, if your workspace is /home/runner/work/your_repo/your_repo/
 # then HL2SDK would be in /home/runner/work/your_repo/hl2sdk/
-set(HL2SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../hl2sdk")
+set(HL2SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../hl2sdk") 
 
 # Determine architecture-specific directory for HL2SDK libraries
 # This logic will correctly set HL2SDK_ARCH_DIR to "linux64" for 64-bit builds.
 if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64-bit
     set(HL2SDK_ARCH_DIR "linux64") # For Linux 64-bit
-    # No -m64 or -m32 flags are needed here.
 elseif (CMAKE_SIZEOF_VOID_P EQUAL 4) # 32-bit
     set(HL2SDK_ARCH_DIR "linux32") # For Linux 32-bit
-    # No -m32 flags here.
 else()
     message(FATAL_ERROR "Unsupported architecture size")
 endif()
