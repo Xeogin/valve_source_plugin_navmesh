@@ -1,10 +1,10 @@
 name: CMake
 
 on:
-  push:
-    branches: [ master ]
-  workflow_dispatch: # Allows manual triggering from GitHub UI
-  pull_request:
+  # push: # Commented out this section to prevent automatic runs on push
+  #   branches: [ master ]
+  workflow_dispatch: # Keep this to allow manual triggering from GitHub UI
+  pull_request: # You might want to keep this for pull requests, or comment it out too if preferred
     branches: [ master ]
 
 jobs:
