@@ -85,19 +85,12 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
-    # --- Windows Specific Steps ---
+ # --- Windows Specific Steps ---
     # NEW STEP: Build Source SDK 2013 Libraries on Windows
     - name: Build Source SDK 2013 Libraries (Windows)
       if: runner.os == 'Windows'
       run: |
-        # Set up the Visual Studio build environment.
-        # This makes 'msbuild.exe' available in the PATH and configures other build tools.
-        # Using vcvars64.bat for a 64-bit host environment, which is common on GitHub runners.
-        # If your build specifically needs a 32-bit native toolchain, use vcvars32.bat.
         "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-
-        # Now, build the Source SDK solution.
-        # The path to the solution uses backslashes for cmd compatibility.
         msbuild.exe "${{ github.workspace }}\source-sdk-2013\src\VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
       shell: cmd # Crucial to use cmd for vcvarsall.bat and msbuild
 
