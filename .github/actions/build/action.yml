@@ -11,7 +11,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: alliedmodders/hl2sdk
-        ref: hl2dm
+        ref: hl2dm # This was already corrected, keeping it
         path: hl2sdk
 
     - name: Configure CMake
@@ -26,20 +26,22 @@ runs:
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
       shell: bash
 
-    - name: Upload Linux Artifact (if applicable) # This name will appear in the UI
-      if: runner.os == 'Linux' # Only run on Linux runners
-      uses: actions/upload-artifact@v4
-      with:
-        name: valve_source_plugin_navmesh-linux # Name of the artifact bundle
-        path: "${{github.workspace}}/build/Release/valve_source_plugin_navmesh.so" # Adjust path if needed
-        # You might need to adjust 'Release/' if your build output is directly in 'build/'
-        # or in a 'Debug/' folder, or if the name is different.
+    # --- CORRECTED ARTIFACT UPLOAD STEPS ---
 
-    - name: Upload Windows Artifact (if applicable) # This name will appear in the UI
-      if: runner.os == 'Windows' # Only run on Windows runners
+    - name: Upload Linux Plugin Artifact
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
-        name: valve_source_plugin_navmesh-windows # Name of the artifact bundle
-        path: "${{github.workspace}}/build/Release/valve_source_plugin_navmesh.dll" # Adjust path if needed
-        # Similar to above, adjust 'Release/' if your build output is directly in 'build/'
-        # or in a 'Debug/' folder, or if the name is different.
+        name: navmesh-plugin-linux # Name for the downloadable zip
+        # This is the CORRECTED path for Linux:
+        path: ${{github.workspace}}/build/test/libplugin_navmesh.so
+
+    - name: Upload Windows Plugin Artifact
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-windows # Name for the downloadable zip
+        # This is the CORRECTED path for Windows:
+        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+
+    # --- END CORRECTED ARTIFACT UPLOAD STEPS ---
