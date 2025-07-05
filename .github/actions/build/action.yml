@@ -106,6 +106,15 @@ runs:
             EXIT /B %ERRORLEVEL%
         )
         echo "createallprojects.bat completed."
+
+        REM --- DIAGNOSTIC START: Verify files immediately after generation ---
+        echo "Verifying contents of src directory immediately after createallprojects.bat:"
+        dir *.vcxproj
+        dir everything.sln
+        echo "Verifying contents of parent directory (just in case):"
+        dir ..\*.vcxproj
+        dir ..\*.sln
+        REM --- DIAGNOSTIC END ---
         
         REM Return to the previous directory
         POPD
