@@ -30,9 +30,12 @@ list(APPEND shared_includes
     "${HL2SDK_DIR}/src/public/tier0"
     "${HL2SDK_DIR}/src/public/tier1"
     "${HL2SDK_DIR}/src/common"
-    "${HL2SDK_DIR}/src/public/mathlib" # Added for vector.h, matrix.h, etc.
-    "${HL2SDK_DIR}/src/public/vgui"    # Added for Color.h, etc.
-    # Add any other frequently used SDK include paths here
+    "${HL2SDK_DIR}/src/public/mathlib"
+    "${HL2SDK_DIR}/src/public/vgui"
+    "${HL2SDK_DIR}/src/public/engine"     # Added for IEngineTrace.h, ivdebugoverlay.h
+    "${HL2SDK_DIR}/src/public/game/server" # Added for iplayerinfo.h (common location)
+    "${HL2SDK_DIR}/src/public/player"      # Another possible location for iplayerinfo.h
+    "${HL2SDK_DIR}/src/public/game"        # Added for GameEventListener.h
 )
 # Make these globally available for all source files in the project
 include_directories(${shared_includes})
