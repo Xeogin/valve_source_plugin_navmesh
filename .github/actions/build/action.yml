@@ -95,7 +95,7 @@ runs:
         REM Set up the Visual Studio build environment (x64)
         CALL "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" x64
         
-        REM Navigate to the SDK source directory
+        REM Navigate to the SDK source directory for VPC
         PUSHD "${{ github.workspace }}\source-sdk-2013\src"
         
         REM Run VPC to generate project and solution files
@@ -107,7 +107,7 @@ runs:
         )
         echo "createallprojects.bat completed."
 
-        REM --- DIAGNOSTIC START: Verify files immediately after generation ---
+        REM --- DIAGNOSTIC START: Verify files immediately after generation (still might not show up due to cmd quirk) ---
         echo "Verifying contents of src directory immediately after createallprojects.bat:"
         dir *.vcxproj
         dir everything.sln
@@ -120,7 +120,6 @@ runs:
         POPD
       shell: cmd
 
-    # New diagnostic step here to check *after* the previous step finishes
     - name: "Verify .vcxproj files after Generation step (Windows)"
       if: runner.os == 'Windows'
       run: |
@@ -129,7 +128,7 @@ runs:
         echo "Checking for everything.sln in ${{ github.workspace }}\source-sdk-2013\src after the Generation step completes:"
         dir "${{ github.workspace }}\source-sdk-2013\src\everything.sln"
         
-        REM --- NEW DIAGNOSTICS ADDED BELOW THIS LINE ---
+        REM --- NEW DIAGNOSTICS FROM PREVIOUS RUN ---
         echo "Checking for .vcxproj files in the runner's TEMP directory:"
         dir "%TEMP%\*.vcxproj" /s /b
         echo "Checking for .vcxproj files in the runner's user profile (TEMP for GitHub Actions):"
@@ -146,46 +145,43 @@ runs:
         REM Set up the Visual Studio build environment (x64) - must be called in each new shell
         CALL "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" x64
         
-        REM Navigate to the SDK source directory
-        PUSHD "${{ github.workspace }}\source-sdk-2013\src"
+        REM Define the base path to the SDK src directory
+        SET "SDK_SRC_DIR=${{ github.workspace }}\source-sdk-2013\src"
 
         REM --- DIAGNOSTIC START ---
-        echo "Current directory after PUSHD:"
-        cd
-        echo "Listing contents of current directory for .vcxproj files:"
-        dir *.vcxproj
-        echo "Listing specific tier1_win64.vcxproj file:"
-        dir tier1_win64.vcxproj
+        echo "Attempting to list contents of SDK_SRC_DIR for .vcxproj files using absolute path:"
+        dir "%SDK_SRC_DIR%\*.vcxproj"
+        echo "Listing specific tier1_win64.vcxproj file using absolute path:"
+        dir "%SDK_SRC_DIR%\tier1\tier1_win64.vcxproj"
         REM --- DIAGNOSTIC END ---
         
-        REM --- Explicitly build critical missing libraries ---
-        echo "Attempting to build tier1.lib explicitly..."
-        msbuild tier1_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+        REM --- Explicitly build critical missing libraries using absolute paths ---
+        echo "Attempting to build tier1.lib explicitly using absolute path..."
+        msbuild "%SDK_SRC_DIR%\tier1\tier1_win64.vcxproj" /p:Configuration="Release" /p:Platform="x64" /v:d
         IF %ERRORLEVEL% NEQ 0 (
             echo "ERROR: tier1.lib build failed!"
             EXIT /B %ERRORLEVEL%
         )
         echo "tier1.lib build command completed."
         
-        echo "Attempting to build mathlib.lib explicitly..."
-        msbuild mathlib_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+        echo "Attempting to build mathlib.lib explicitly using absolute path..."
+        msbuild "%SDK_SRC_DIR%\mathlib\mathlib_win64.vcxproj" /p:Configuration="Release" /p:Platform="x64" /v:d
         IF %ERRORLEVEL% NEQ 0 (
             echo "ERROR: mathlib.lib build failed!"
             EXIT /B %ERRORLEVEL%
         )
         echo "mathlib.lib build command completed."
 
-        REM Build the 'everything.sln' solution with detailed output.
-        echo "Attempting to build everything.sln..."
-        msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /v:d
+        REM Build the 'everything.sln' solution with detailed output using absolute path.
+        echo "Attempting to build everything.sln using absolute path..."
+        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /p:Platform="x64" /v:d
         IF %ERRORLEVEL% NEQ 0 (
             echo "ERROR: everything.sln build failed!"
             EXIT /B %ERRORLEVEL%
         )
         echo "everything.sln build command completed."
         
-        REM Return to the previous directory
-        POPD
+        REM No POPD needed here as we didn't PUSHD
       shell: cmd
 
     - name: "Inspect Source SDK x64 lib output (Crucial Step)"
