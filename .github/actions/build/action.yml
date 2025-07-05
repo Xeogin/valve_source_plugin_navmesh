@@ -12,9 +12,9 @@ runs:
       with:
         repository: alliedmodders/hl2sdk
         ref: hl2dm
-        path: hl2sdk
+        path: hl2sdk # HL2SDK is checked out to ${{github.workspace}}/hl2sdk
 
-    # --- UPDATED DEBUG STEP FOR 64-BIT (NOW NON-FAILING) ---
+    # UPDATED DEBUG STEP FOR 64-BIT (NON-FAILING)
     - name: Debug - List HL2SDK Linux64 Libraries
       if: runner.os == 'Linux'
       run: |
@@ -24,7 +24,6 @@ runs:
         echo "Listing contents of hl2sdk/lib/common/linux64:"
         ls -l ${{github.workspace}}/hl2sdk/lib/common/linux64/ || true # Added || true
       shell: bash
-    # --- END UPDATED DEBUG STEP ---
 
     - name: Configure CMake
       run: |
