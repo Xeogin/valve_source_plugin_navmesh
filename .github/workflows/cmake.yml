@@ -42,16 +42,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        path: ${{github.workspace}}/build/Release/valve_source_plugin_navmesh.so # This path is currently incorrect
-        # ... (rest of your existing upload step)
+        path: ${{github.workspace}}/build/Release/libplugin_navmesh.so
 
     - name: Upload Windows Build Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
-        path: ${{github.workspace}}/build/Release/valve_source_plugin_navmesh.dll # This path is currently incorrect
-        # ... (rest of your existing upload step)
+        path: ${{github.workspace}}/build/Release/libplugin_navmesh.dll
 
     - name: Test
       working-directory: ${{github.workspace}}/build
