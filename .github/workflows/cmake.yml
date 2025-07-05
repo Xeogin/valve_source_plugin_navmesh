@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [ master ]
-    
+
 jobs:
   build:
     # The CMake configure and build commands are platform agnostic and should work equally
@@ -21,14 +21,43 @@ jobs:
     - uses: actions/checkout@v4
       with:
         path: valve_source_plugin_navmesh
-    - name: Checkout and Build project 
+    - name: Checkout and Build project
       uses: ./valve_source_plugin_navmesh/.github/actions/build
       with:
         repo-path: valve_source_plugin_navmesh
-        
+
+    # --- START: Add these steps to upload artifacts ---
+    - name: Upload Linux Build Artifact
+      # This step runs only on the Linux runner
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-linux # The name of the artifact bundle (will be a .zip file)
+        # The path to the compiled .so file on the Linux runner
+        # This assumes the plugin is named 'valve_source_plugin_navmesh.so'
+        # and is located in the 'Release' subdirectory of the 'build' folder.
+        path: ${{github.workspace}}/build/Release/valve_source_plugin_navmesh.so
+        # IMPORTANT: Double-check this path. If the .so file is directly in 'build',
+        # change it to: path: ${{github.workspace}}/build/valve_source_plugin_navmesh.so
+        # If the filename is different, update 'valve_source_plugin_navmesh.so'.
+
+    - name: Upload Windows Build Artifact
+      # This step runs only on the Windows runner
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-windows # The name of the artifact bundle (will be a .zip file)
+        # The path to the compiled .dll file on the Windows runner
+        # This assumes the plugin is named 'valve_source_plugin_navmesh.dll'
+        # and is located in the 'Release' subdirectory of the 'build' folder.
+        path: ${{github.workspace}}/build/Release/valve_source_plugin_navmesh.dll
+        # IMPORTANT: Double-check this path. If the .dll file is directly in 'build',
+        # change it to: path: ${{github.workspace}}/build/valve_source_plugin_navmesh.dll
+        # If the filename is different, update 'valve_source_plugin_navmesh.dll'.
+    # --- END: Add these steps ---
+
     - name: Test
       working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.  
+      # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C Release
-      
