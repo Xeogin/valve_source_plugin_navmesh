@@ -22,42 +22,42 @@ set (mathlib mathlib)
 set (lzma lzma)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    list(APPEND shared_defs __clang__)
+    list(APPEND shared_defs __clang__)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    list(APPEND shared_defs GNUC) # GNUC is often important for Source SDK
+    list(APPEND shared_defs GNUC) # GNUC is often important for Source SDK
 endif()
 
 if (LINUX)
-    set (tier1 :tier1.a)
-    set (mathlib :mathlib.a)
-    set (lzma :lzma.a)
+    set (tier1 :tier1.a)
+    set (mathlib :mathlib.a)
+    set (lzma :lzma.a)
     # The 'lib' directory structure in Valve's SDK is a bit tricky.
     # The Linux 64-bit libraries might be in source-sdk-2013/lib/linux64
     # rather than under HL2SDK_PUB_LIBS/linux64. Adjust as needed.
     # If source-sdk-2013 has pre-compiled libraries, ensure these paths point correctly.
     # For now, let's point them to the general lib dir if the specific /public or /common subdirs don't exist under 'lib'.
     set (HL2SDK_COM_LIBS ${HL2SDK_DIR}/lib/linux64/common) # Assuming this structure
-    set (HL2SDK_PUB_LIBS ${HL2SDK_DIR}/lib/linux64/public) # Assuming this structure
+    set (HL2SDK_PUB_LIBS ${HL2SDK_DIR}/lib/linux64/public) # Assuming this structure
     # If the above don't exist, you might need to adjust or rely on your project compiling them.
     
-    set (SRC_HOME $ENV{HOME})
-    set( steam_root "$ENV{HOME}/.steam/steam" )
-    set(my_compile_options $<$<CONFIG:Debug>:-Wall> -fPIC -m64)
-    list(APPEND shared_defs _LINUX LINUX POSIX)
-    set(my_link_options -static-libgcc -static-libstdc++)
+    set (SRC_HOME $ENV{HOME})
+    set( steam_root "$ENV{HOME}/.steam/steam" )
+    set(my_compile_options $<$<CONFIG:Debug>:-Wall> -fPIC -m64)
+    list(APPEND shared_defs _LINUX LINUX POSIX)
+    set(my_link_options -static-libgcc -static-libstdc++)
 else() # This block applies to Windows
-    # Windows specific settings (keep these for cross-platform compatibility)
+    # Windows specific settings (keep these for cross-platform compatibility)
     # For now, comment them out if they refer to non-existent pre-compiled binaries
     # and rely on your subdirectories (tier1, mathlib) to build necessary components.
 
-    set(my_compile_options
-        $<$<CONFIG:>:/MT>
-        $<$<CONFIG:Debug>:/MTd>
-        $<$<CONFIG:Release>:/MT>
-    )
-    list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE
-        _CRT_NONSTDC_NO_DEPRECATE)
-    set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
+    set(my_compile_options
+        $<$<CONFIG:>:/MT>
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<CONFIG:Release>:/MT>
+    )
+    list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE
+        _CRT_NONSTDC_NO_DEPRECATE)
+    set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
 endif ()
 
 # !!! CRITICAL CHANGE HERE !!!
