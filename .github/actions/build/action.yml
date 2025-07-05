@@ -92,22 +92,22 @@ runs:
     - name: Generate Source SDK 2013 Solution (Windows)
       if: runner.os == 'Windows'
       run: |
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
-            pushd "${{ github.workspace }}\source-sdk-2013\src" && (
-                createallprojects.bat
-            ) && popd
-        )
-      shell: cmd
-
-    - name: Build Source SDK 2013 Libraries (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        REM Set up the Visual Studio build environment and then run MSBuild
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
-            pushd "${{ github.workspace }}\source-sdk-2013\src" && (
-                msbuild.exe "everything.sln" /p:Configuration=Release /p:Platform=Win32 /m # <-- CHANGED TO everything.sln
-            ) && popd
-        )
+        # Set up the Visual Studio build environment (x64)
+        CALL "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" x64
+        
+        # Navigate to the SDK source directory
+        PUSHD "${{ github.workspace }}\source-sdk-2013\src"
+        
+        # Run VPC to generate project and solution files
+        createallprojects.bat
+        
+        # Build the 'everything.sln' solution.
+        # MSBuild should now be in the PATH due to vcvars64.bat.
+        # Ensure platform is x64 for a 64-bit build.
+        msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /maxcpucount
+        
+        # Return to the previous directory
+        POPD
       shell: cmd
 
     - name: Configure CMake for Windows
