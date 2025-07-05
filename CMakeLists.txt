@@ -74,7 +74,9 @@ else() # This block applies to Windows
     )
     list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE
         _CRT_NONSTDC_NO_DEPRECATE)
-    set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
+    
+    # --- MODIFIED: Explicitly setting linker paths for Windows ---
+    set(my_link_options "/NODEFAULTLIB:libcmtd /SAFESEH:NO /LIBPATH:${SDK_PUBLIC_LIB_PATH} /LIBPATH:${SDK_COMMON_LIB_PATH}")
 endif ()
 
 
@@ -88,11 +90,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 
 # --- Find and Link Source SDK Libraries ---
 
-# Add the determined SDK library paths to link_directories
-link_directories(
-    "${SDK_PUBLIC_LIB_PATH}"
-    "${SDK_COMMON_LIB_PATH}" # Now includes the new common path
-)
+# --- COMMENTED OUT: Explicit /LIBPATH is now used in my_link_options ---
+# link_directories(
+#     "${SDK_PUBLIC_LIB_PATH}"
+#     "${SDK_COMMON_LIB_PATH}" # Now includes the new common path
+# )
 
 # Find specific SDK libraries
 find_library(TIER0_LIB tier0 PATHS "${SDK_PUBLIC_LIB_PATH}" "${SDK_COMMON_LIB_PATH}" NO_DEFAULT_PATH)
@@ -119,6 +121,9 @@ endif()
 if(NOT LZMA_LIB)
     message(FATAL_ERROR "Could not find lzma library. Searched in: ${SDK_COMMON_LIB_PATH}")
 endif()
+
+# --- NEW: Apply the custom link options to your target ---
+target_link_options(plugin_navmesh PUBLIC ${my_link_options})
 
 target_link_libraries(
     plugin_navmesh # This should be the target name for your final plugin DLL/SO
