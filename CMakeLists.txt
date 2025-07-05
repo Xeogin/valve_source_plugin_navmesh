@@ -13,7 +13,9 @@ set (HL2SDK_PUB_LIBS)
 set (HL2SDK_COM_LIBS)
 
 set (mods "tf;dod;hl2mp")
-set(shared_defs  PLATFORM_64BITS X64BITS RAD_TELEMETRY_DISABLED $<$<CONFIG:Debug>:_DEBUG>)
+
+# --- MODIFIED: Initialize shared_defs without architecture-specific defines ---
+set(shared_defs RAD_TELEMETRY_DISABLED $<$<CONFIG:Debug>:_DEBUG>) 
 
 set (tier1 tier1)
 set (mathlib mathlib)
@@ -30,9 +32,14 @@ if (LINUX)
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         set(HL2SDK_ARCH_DIR "linux32")
         message(STATUS "Building for 32-bit Linux - Using HL2SDK libs from: ${HL2SDK_ARCH_DIR}")
+        # --- ADDED: 32-bit specific defines for shared_defs on Linux ---
+        # No PLATFORM_64BITS or X64BITS for 32-bit builds
+        list(APPEND shared_defs _LINUX LINUX POSIX) 
     elseif (CMAKE_SIZEOF_VOID_P EQUAL 8)
         set(HL2SDK_ARCH_DIR "linux64")
         message(STATUS "Building for 64-bit Linux - Using HL2SDK libs from: ${HL2SDK_ARCH_DIR}")
+        # --- ADDED: 64-bit specific defines for shared_defs on Linux ---
+        list(APPEND shared_defs _LINUX LINUX POSIX PLATFORM_64BITS X64BITS)
     else()
         message(FATAL_ERROR "Unsupported target architecture. CMAKE_SIZEOF_VOID_P is ${CMAKE_SIZEOF_VOID_P}")
     endif()
@@ -49,18 +56,16 @@ if (LINUX)
 	set (SRC_HOME $ENV{HOME})
 	set( steam_root "$ENV{HOME}/.steam/steam" )
 	
-    # --- ADDED SSE/SSE2 AND FPMATH FLAGS HERE ---
-    set(my_compile_options 
+    # Add SSE/SSE2 and floating-point math flags for Linux compilation
+	set(my_compile_options 
         $<$<CONFIG:Debug>:-Wall> 
         -fPIC 
         -msse 
         -msse2 
-        -mfpmath=sse # Ensures floating-point operations use SSE registers
+        -mfpmath=sse 
     ) 
-	list(APPEND shared_defs _LINUX LINUX POSIX)
 	set(my_link_options -static-libgcc -static-libstdc++)
-else()
-    # Windows paths
+else() # Windows (assuming this is always x64 for now)
 	set (HL2SDK_PUB_LIBS ${HL2SDK_DIR}/lib/public/x64)
 	set (HL2SDK_COM_LIBS ${HL2SDK_DIR}/lib/common/x64/2015/release)
 	set(my_compile_options
@@ -68,8 +73,10 @@ else()
 		$<$<CONFIG:Debug>:/MTd>
 		$<$<CONFIG:Release>:/MT>
 	)
+    # --- ADDED: 64-bit specific defines for shared_defs on Windows ---
+    # Windows builds are currently always 64-bit in your setup
 	list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE 
-		_CRT_NONSTDC_NO_DEPRECATE)
+		_CRT_NONSTDC_NO_DEPRECATE PLATFORM_64BITS X64BITS) 
 	set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
 endif ()
 
