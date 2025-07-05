@@ -119,6 +119,15 @@ runs:
         
         REM Navigate to the SDK source directory
         PUSHD "${{ github.workspace }}\source-sdk-2013\src"
+
+        REM --- DIAGNOSTIC START ---
+        echo "Current directory after PUSHD:"
+        cd
+        echo "Listing contents of current directory for .vcxproj files:"
+        dir *.vcxproj
+        echo "Listing specific tier1_win64.vcxproj file:"
+        dir tier1_win64.vcxproj
+        REM --- DIAGNOSTIC END ---
         
         REM --- Explicitly build critical missing libraries ---
         echo "Attempting to build tier1.lib explicitly..."
