@@ -1,57 +1,28 @@
-name: 'Build'
-description: 'Builds the Nav Mesh Project'
-inputs:
-  repo-path:
-    description: 'Path to the plugin project source'
-    required: true
-runs:
-  using: "composite"
-  steps:
-    - name: Checkout HL2SDK from Allied Modders
-      uses: actions/checkout@v4
+name: CMake
+
+on:
+  # push: # Commented out this section to prevent automatic runs on push
+  #   branches: [ master ]
+  workflow_dispatch: # Keep this to allow manual triggering from GitHub UI
+  pull_request: # You might want to keep this for pull requests, or comment it out too if preferred
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v4
       with:
-        repository: alliedmodders/hl2sdk
-        ref: hl2dm
-        path: hl2sdk # HL2SDK is checked out to ${{github.workspace}}/hl2sdk
+        path: valve_source_plugin_navmesh
 
-    # UPDATED DEBUG STEP FOR 64-BIT (NON-FAILING)
-    - name: Debug - List HL2SDK Linux64 Libraries
-      if: runner.os == 'Linux'
-      run: |
-        echo "Listing contents of hl2sdk/lib/public/linux64:"
-        ls -l ${{github.workspace}}/hl2sdk/lib/public/linux64/ || true # Added || true
-        echo ""
-        echo "Listing contents of hl2sdk/lib/common/linux64:"
-        ls -l ${{github.workspace}}/hl2sdk/lib/common/linux64/ || true # Added || true
-      shell: bash
-
-    - name: Configure CMake
-      run: |
-        cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}"
-        
-        # Removed -m32 flags for Linux (now builds 64-bit by default)
-        
-        eval "$cmake_command"
-      env:
-        BUILD_TYPE: Release
-      shell: bash
-
-    - name: Build Project
-      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
-      env:
-        BUILD_TYPE: Release
-      shell: bash
-
-    - name: Upload Linux Plugin Artifact
-      if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v4
+    - name: Checkout and Build project
+      uses: ./valve_source_plugin_navmesh/.github/actions/build
       with:
-        name: navmesh-plugin-linux
-        path: ${{github.workspace}}/build/test/libplugin_navmesh.so
+        repo-path: valve_source_plugin_navmesh
 
-    - name: Upload Windows Plugin Artifact
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@v4
-      with:
-        name: navmesh-plugin-windows
-        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      run: ctest -C Release
