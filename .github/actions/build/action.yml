@@ -12,11 +12,28 @@ runs:
       with:
         repository: alliedmodders/hl2sdk
         ref: hl2dm
+        # HL2SDK is checked out to ${{github.workspace}}/hl2sdk
         path: hl2sdk
+
+    # --- ADD THIS DEBUG STEP HERE ---
+    - name: Debug - List HL2SDK Linux32 Libraries
+      # This step should only run on Linux, as the directories are specific to Linux32 builds
+      if: runner.os == 'Linux' 
+      run: |
+        echo "Listing contents of hl2sdk/lib/public/linux32:"
+        # The HL2SDK is at ${{github.workspace}}/hl2sdk
+        ls -l ${{github.workspace}}/hl2sdk/lib/public/linux32/
+        echo ""
+        echo "Listing contents of hl2sdk/lib/common/linux32:"
+        ls -l ${{github.workspace}}/hl2sdk/lib/common/linux32/
+      shell: bash
+    # --- END DEBUG STEP ---
 
     - name: Configure CMake
       run: |
         # Build the base cmake command
+        # Source is at ${{github.workspace}}/${{ inputs.repo-path }}
+        # Build directory is at ${{github.workspace}}/build
         cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}"
         
         # Add 32-bit flags specifically for Linux compilation
@@ -30,15 +47,11 @@ runs:
         BUILD_TYPE: Release
       shell: bash
 
-    # --- ADD THIS MISSING BUILD STEP HERE ---
     - name: Build Project
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
       env:
         BUILD_TYPE: Release
       shell: bash
-    # --- END MISSING BUILD STEP ---
-
-    # --- FINAL ARTIFACT UPLOAD STEPS (with original names) ---
 
     - name: Upload Linux Plugin Artifact
       if: runner.os == 'Linux'
@@ -53,5 +66,3 @@ runs:
       with:
         name: navmesh-plugin-windows # Reverted to original name
         path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
-
-    # --- END FINAL ARTIFACT UPLOAD STEPS ---
