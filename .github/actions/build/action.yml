@@ -1,7 +1,7 @@
 name: 'Build'
 description: 'Builds the Nav Mesh Project'
 inputs:
-  repo-path:  
+  repo-path:
     description: 'Path to the plugin project source'
     required: true
 runs:
@@ -10,22 +10,36 @@ runs:
     - name: Checkout HL2SDK from Allied Modders
       uses: actions/checkout@v4
       with:
-        repository: alliedmodders/hl2sdk      
+        repository: alliedmodders/hl2sdk
         ref: hl2dm
         path: hl2sdk
-        
+
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -S "${{github.workspace}}/${{ inputs.repo-path }}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-      
-      env: # specify compiler
-        BUILD_TYPE: Release        
+      env:
+        BUILD_TYPE: Release
       shell: bash
 
     - name: Build
-      # Build your program with the given configuration
-      env: # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+      env:
         BUILD_TYPE: Release
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
       shell: bash
+
+    - name: Upload Linux Artifact (if applicable) # This name will appear in the UI
+      if: runner.os == 'Linux' # Only run on Linux runners
+      uses: actions/upload-artifact@v4
+      with:
+        name: valve_source_plugin_navmesh-linux # Name of the artifact bundle
+        path: "${{github.workspace}}/build/Release/valve_source_plugin_navmesh.so" # Adjust path if needed
+        # You might need to adjust 'Release/' if your build output is directly in 'build/'
+        # or in a 'Debug/' folder, or if the name is different.
+
+    - name: Upload Windows Artifact (if applicable) # This name will appear in the UI
+      if: runner.os == 'Windows' # Only run on Windows runners
+      uses: actions/upload-artifact@v4
+      with:
+        name: valve_source_plugin_navmesh-windows # Name of the artifact bundle
+        path: "${{github.workspace}}/build/Release/valve_source_plugin_navmesh.dll" # Adjust path if needed
+        # Similar to above, adjust 'Release/' if your build output is directly in 'build/'
+        # or in a 'Debug/' folder, or if the name is different.
