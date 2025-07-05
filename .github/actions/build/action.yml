@@ -128,6 +128,16 @@ runs:
         dir "${{ github.workspace }}\source-sdk-2013\src\*.vcxproj"
         echo "Checking for everything.sln in ${{ github.workspace }}\source-sdk-2013\src after the Generation step completes:"
         dir "${{ github.workspace }}\source-sdk-2013\src\everything.sln"
+        
+        # --- NEW DIAGNOSTICS ADDED BELOW THIS LINE ---
+        echo "Checking for .vcxproj files in the runner's TEMP directory:"
+        dir "%TEMP%\*.vcxproj" /s /b
+        echo "Checking for .vcxproj files in the runner's user profile (TEMP for GitHub Actions):"
+        dir "%USERPROFILE%\AppData\Local\Temp\*.vcxproj" /s /b
+        echo "Checking for .vcxproj files in the workspace root:"
+        dir "${{ github.workspace }}\*.vcxproj" /s /b
+        # --- NEW DIAGNOSTICS END HERE ---
+        
       shell: cmd # Important to use cmd for Windows `dir` command
 
     - name: Build Source SDK 2013 Libraries (Windows)
