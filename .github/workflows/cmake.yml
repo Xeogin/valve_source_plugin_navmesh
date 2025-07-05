@@ -26,5 +26,6 @@ jobs:
         repo-path: valve_source_plugin_navmesh
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      # --- FIX: Corrected working directory for Windows build output ---
+      working-directory: ${{github.workspace}}/valve_source_plugin_navmesh/build_windows
       run: ctest -C Release
