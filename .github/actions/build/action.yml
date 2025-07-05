@@ -85,14 +85,14 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
- # --- Windows Specific Steps ---
-    # NEW STEP: Build Source SDK 2013 Libraries on Windows
+    # --- Windows Specific Steps ---
     - name: Build Source SDK 2013 Libraries (Windows)
       if: runner.os == 'Windows'
       run: |
-        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        REM Set up the Visual Studio build environment and then run MSBuild
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
         msbuild.exe "${{ github.workspace }}\source-sdk-2013\src\VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
-      shell: cmd # Crucial to use cmd for vcvarsall.bat and msbuild
+      shell: cmd # Crucial to use cmd for vcvarsall.bat and msbuild to ensure environment is set correctly
 
     - name: Configure CMake for Windows
       if: runner.os == 'Windows'
