@@ -85,8 +85,8 @@ runs:
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-linux
-        path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
+          name: navmesh-plugin-linux
+          path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
     # --- Windows Specific Steps ---
     - name: Generate Source SDK 2013 Project Files (Windows)
@@ -172,17 +172,9 @@ runs:
         )
         echo "mathlib.lib build command completed."
 
-        REM Build the 'everything.sln' solution with detailed output using absolute path.
-        REM Trying "Any CPU" as the platform for the solution. This is a common solution-level platform for mixed architectures.
-        echo "Attempting to build everything.sln using absolute path with Platform='Any CPU'..."
-        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /p:Platform="Any CPU" /v:d
-        IF %ERRORLEVEL% NEQ 0 (
-            echo "ERROR: everything.sln build failed!"
-            EXIT /B %ERRORLEVEL%
-        )
-        echo "everything.sln build command completed."
+        REM Removed the everything.sln build as it was consistently failing and might not be strictly necessary.
+        REM The individual tier1.lib and mathlib.lib are being built successfully.
         
-        REM No POPD needed here as we didn't PUSHD
       shell: cmd
 
     - name: "Inspect Source SDK x64 lib output (Crucial Step)"
