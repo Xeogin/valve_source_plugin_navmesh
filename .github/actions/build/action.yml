@@ -173,8 +173,9 @@ runs:
         echo "mathlib.lib build command completed."
 
         REM Build the 'everything.sln' solution with detailed output using absolute path.
-        echo "Attempting to build everything.sln using absolute path..."
-        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /p:Platform="x64" /v:d
+        REM Trying 'Win32' as the platform for the solution as 'x64' might not be a valid solution platform name
+        echo "Attempting to build everything.sln using absolute path with Platform=Win32..."
+        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /p:Platform="Win32" /v:d
         IF %ERRORLEVEL% NEQ 0 (
             echo "ERROR: everything.sln build failed!"
             EXIT /B %ERRORLEVEL%
