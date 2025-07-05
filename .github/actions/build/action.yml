@@ -13,8 +13,8 @@ runs:
       uses: actions/checkout@v4
       with:
         path: ${{ inputs.repo-path }}
-        repository: Xeogin/valve_source_plugin_navmesh # Ensure this is your repository
-        token: ${{ github.token }} # Use GITHUB_TOKEN for cloning
+        repository: Xeogin/valve_source_plugin_navmesh
+        token: ${{ github.token }}
         ssh-strict: true
         ssh-user: git
         persist-credentials: true
@@ -32,8 +32,8 @@ runs:
       with:
         repository: ValveSoftware/source-sdk-2013
         ref: master
-        path: source-sdk-2013 # This will put the SDK in a sibling directory to your plugin
-        token: ${{ github.token }} # Use GITHUB_TOKEN for cloning
+        path: source-sdk-2013
+        token: ${{ github.token }}
         ssh-strict: true
         ssh-user: git
         persist-credentials: true
@@ -46,57 +46,100 @@ runs:
         submodules: false
         set-safe-directory: true
 
+    # --- Linux Specific Steps ---
     - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        # Install 64-bit build tools and 32-bit compatibility libraries (multilib)
-        # The Source SDK often needs these for its own build process or for linking against older components.
         sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
 
-        # Navigate to the SDK's multiplayer source directory
-        # CORRECTED PATH: The 'src' directory is directly under the checked out SDK root.
         cd "${{github.workspace}}/source-sdk-2013/src"
-
-        # Run the SDK's build scripts to generate Makefiles/project files for Linux
-        # This is CRUCIAL for setting up the SDK's own build environment for 64-bit.
-        # The 'buildallprojects' script typically handles both 32-bit and 64-bit.
-        ./buildallprojects # This script sets up the build environment for the SDK itself
-        # You might also need to run ./creategameprojects if your plugin is a game module
+        ./buildallprojects
       shell: bash
 
-    - name: Configure CMake
+    - name: Configure CMake for Linux
+      if: runner.os == 'Linux'
+      run: |
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}"
+        mkdir -p build_linux
+        cd build_linux
+
+        cmake \
+          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/source-sdk-2013/linux_tools/linux_gcc_64.cmake" \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
+          ..
+      shell: bash
+
+    - name: Build with CMake for Linux
+      if: runner.os == 'Linux'
+      run: |
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_linux"
+        cmake --build . -j $(nproc)
+      shell: bash
+
+    - name: Upload Linux Artifact
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: navmesh-plugin-linux
+        path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
+
+    # --- Windows Specific Steps ---
+    - name: Prepare Source SDK for Windows
+      if: runner.os == 'Windows'
+      run: |
+        # On Windows, the SDK build process usually involves running a batch file
+        # or opening a VS solution. './buildallprojects.bat' is common.
+        # This will set up necessary VS projects.
+        # Ensure Visual Studio build tools are available on the runner.
+        # GitHub's Windows runners usually come with Visual Studio pre-installed.
+        cd "${{ github.workspace }}/source-sdk-2013/src"
+        .\buildallprojects.bat
+      shell: cmd # Use cmd for batch files
+
+    - name: Configure CMake for Windows
+      if: runner.os == 'Windows'
       run: |
         # Ensure you are in your plugin's directory for CMake configuration
         cd "${{ github.workspace }}/${{ inputs.repo-path }}"
         
         # Create a build directory if it doesn't exist
-        mkdir -p build_linux
-        cd build_linux
+        mkdir -p build_windows
+        cd build_windows
 
-        # Configure CMake for a Release build targeting 64-bit Linux.
-        # Set CMAKE_TOOLCHAIN_FILE to use Valve's Linux toolchain from the SDK.
-        # Point CMAKE_BUILD_TYPE to Release for optimized builds.
-        # Define SOURCE_SDK_PATH to the checked out Source SDK.
-        cmake \
-          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/source-sdk-2013/linux_tools/linux_gcc_64.cmake" \
+        # Configure CMake for a Release build targeting Windows.
+        # CMake will automatically find Visual Studio if it's in the PATH.
+        # We specify the generator explicitly for clarity.
+        # The Source SDK usually builds 32-bit by default, but you can target x64.
+        # For Source SDK 2013, 32-bit is common for mods. If your plugin is 64-bit,
+        # you'll need to adjust your CMakeLists.txt and potentially the generator.
+        # For typical SDK 2013 (32-bit): "Visual Studio 17 2022"
+        # For 64-bit: "Visual Studio 17 2022" -A x64 (or similar, depending on CMake version)
+        cmake -G "Visual Studio 17 2022" \
           -DCMAKE_BUILD_TYPE=Release \
           -DSOURCE_SDK_PATH="${{ github.workspace }}/source-sdk-2013" \
           .. # Point to the parent directory where your CMakeLists.txt resides
-      shell: bash
+      shell: bash # Use bash to make path handling consistent, or cmd if preferred
 
-    - name: Build with CMake
+    - name: Build with CMake for Windows
+      if: runner.os == 'Windows'
       run: |
         # Navigate to the build directory created in the previous step
-        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_linux"
+        cd "${{ github.workspace }}/${{ inputs.repo-path }}/build_windows"
 
-        # Build the project using CMake. -j will use all available cores for faster compilation.
-        cmake --build . -j $(nproc)
+        # Build the project using CMake. CMake will invoke MSBuild.
+        # Use --config Release to build the Release configuration.
+        cmake --build . --config Release
       shell: bash
 
-    - name: Upload Artifact
+    - name: Upload Windows Artifact
+      if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-linux
-        path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so # Adjust to capture your compiled .so file
-        # You might want to include debug symbols or other relevant files here.
+        name: navmesh-plugin-windows
+        # Adjust this path to where your .dll file will be generated.
+        # Common paths are Release/*.dll or Debug/*.dll inside the build directory.
+        path: |
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Release/*.dll
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/Debug/*.dll # Include debug in case build type is implicit
