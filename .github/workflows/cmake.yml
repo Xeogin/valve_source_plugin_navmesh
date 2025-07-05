@@ -1,4 +1,5 @@
 name: CMake
+
 on:
   push:
     branches: [ master ]
@@ -21,35 +22,23 @@ jobs:
       with:
         repo-path: valve_source_plugin_navmesh
 
-    # --- ADD THESE DEBUGGING STEPS ---
-    - name: List Build Directory (Linux)
-      if: runner.os == 'Linux'
-      working-directory: ${{github.workspace}}/build
-      run: |
-        echo "Listing contents of build directory (Linux):"
-        ls -R .
-
-    - name: List Build Directory (Windows)
-      if: runner.os == 'Windows'
-      working-directory: ${{github.workspace}}/build
-      run: |
-        echo "Listing contents of build directory (Windows):"
-        dir /s .
-    # --- END DEBUGGING STEPS ---
-
+    # --- ARTIFACT UPLOAD STEPS (UPDATED PATHS) ---
     - name: Upload Linux Build Artifact
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-linux
-        path: ${{github.workspace}}/build/Release/libplugin_navmesh.so
+        # Corrected path and filename for Linux
+        path: ${{github.workspace}}/build/test/Release/libplugin_navmesh.so
 
     - name: Upload Windows Build Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
-        path: ${{github.workspace}}/build/Release/libplugin_navmesh.dll
+        # Corrected path and filename for Windows
+        path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
+    # --- END OF ARTIFACT UPLOAD STEPS ---
 
     - name: Test
       working-directory: ${{github.workspace}}/build
