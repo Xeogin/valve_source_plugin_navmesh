@@ -88,7 +88,7 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
-    # --- Windows Specific Steps (Crucial Changes Here) ---
+    # --- Windows Specific Steps ---
     - name: Generate Source SDK 2013 Project Files (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -173,9 +173,9 @@ runs:
         echo "mathlib.lib build command completed."
 
         REM Build the 'everything.sln' solution with detailed output using absolute path.
-        REM Removing /p:Platform for solution build, letting MSBuild infer based on project platforms.
-        echo "Attempting to build everything.sln using absolute path, letting MSBuild infer Platform..."
-        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /v:d
+        REM Explicitly using "Win32" for the solution-level platform, as x64 might not be a valid solution platform.
+        echo "Attempting to build everything.sln using absolute path with Platform=Win32..."
+        msbuild "%SDK_SRC_DIR%\everything.sln" /p:Configuration="Release" /p:Platform="Win32" /v:d
         IF %ERRORLEVEL% NEQ 0 (
             echo "ERROR: everything.sln build failed!"
             EXIT /B %ERRORLEVEL%
@@ -190,7 +190,7 @@ runs:
       run: |
         echo "Listing contents of source-sdk-2013/src/lib/public/x64:"
         dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\x64"
-        echo "Listing ALL .lib files found recursively in source-sdk-2013/src/lib/public:"
+        echo "Listing ALL .lib files found recursively in source-sdk-2013\src\lib\public:"
         dir "${{ github.workspace }}\source-sdk-2013\src\lib\public\" /s /b *.lib
       shell: cmd
 
