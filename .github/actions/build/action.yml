@@ -88,7 +88,7 @@ runs:
         name: navmesh-plugin-linux
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
-    # --- Windows Specific Steps (changes here) ---
+    # --- Windows Specific Steps (Crucial Changes Here) ---
     - name: Generate and Build Source SDK 2013 (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -101,8 +101,16 @@ runs:
         REM Run VPC to generate project and solution files
         createallprojects.bat
         
+        REM --- Explicitly build critical missing libraries ---
+        echo "Attempting to build tier1.lib explicitly..."
+        msbuild tier1_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+        
+        echo "Attempting to build mathlib.lib explicitly..."
+        msbuild mathlib_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+
         REM Build the 'everything.sln' solution with detailed output.
-        REM Removed /maxcpucount to ensure all build messages are clearer.
+        REM Keep this for other SDK components, but the crucial ones are built above.
+        echo "Attempting to build everything.sln..."
         msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /v:d
         
         REM Return to the previous directory
