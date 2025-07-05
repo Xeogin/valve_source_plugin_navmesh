@@ -48,7 +48,7 @@ runs:
         submodules: false
         set-safe-directory: true
 
-    # Simplified Debug Step for Windows - if this works, the issue was in the 'dir' or 'pushd/popd' lines
+    # This step is for debugging on Windows to confirm the SDK checkout
     - name: Debug: List Source SDK 'src' contents (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -57,15 +57,16 @@ runs:
       shell: cmd
 
     # --- Linux Specific Steps ---
-    - name: Prepare Source SDK for Linux (64-bit)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
-
-        cd "${{github.workspace}}/source-sdk-2013/src"
-        ./buildallprojects
-      shell: bash
+    # THIS ENTIRE SECTION IS COMMENTED OUT FOR YAML PARSING DEBUGGING
+    # - name: Prepare Source SDK for Linux (64-bit)
+    #   if: runner.os == 'Linux'
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
+    #
+    #     cd "${{github.workspace}}/source-sdk-2013/src"
+    #     ./buildallprojects
+    #   shell: bash
 
     - name: Configure CMake for Linux
       if: runner.os == 'Linux'
