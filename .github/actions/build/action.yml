@@ -50,13 +50,9 @@ runs:
     - name: Prepare Source SDK for Linux (64-bit)
       if: runner.os == 'Linux'
       run: |
-        # Update packages and install necessary build tools
         sudo apt-get update
         sudo apt-get install -y build-essential gcc-multilib g++-multilib lib32gcc-s1 lib32stdc++6
 
-        # Navigate to the SDK source directory and run buildallprojects
-        # This script compiles the SDK's internal libraries (tier0, tier1, vstdlib, mathlib, lzma)
-        # for Linux, creating .a files that your plugin will link against.
         cd "${{github.workspace}}/source-sdk-2013/src"
         ./buildallprojects
       shell: bash
@@ -94,16 +90,16 @@ runs:
     - name: Build Source SDK 2013 Libraries (Windows)
       if: runner.os == 'Windows'
       run: |
-        # Use MSBuild to compile the Source SDK solution.
-        # The VSSDK2013.sln is typically found in the 'src' directory of the source-sdk-2013 checkout.
-        # This step generates the .lib files (tier0.lib, tier1.lib, vstdlib.lib, etc.)
-        # that your plugin will link against.
-        # /p:Configuration=Release : Builds the Release configuration of the SDK libraries.
-        # /p:Platform=Win32      : Compiles for 32-bit (most common for Source SDK mods).
-        #                          If your plugin targets 64-bit, change to /p:Platform=x64.
-        # /m                     : Enables multi-processor compilation for faster builds.
-        msbuild.exe "${{ github.workspace }}/source-sdk-2013/src/VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
-      shell: cmd # MSBuild commands are best run directly with the cmd shell on Windows
+        # Set up the Visual Studio build environment.
+        # This makes 'msbuild.exe' available in the PATH and configures other build tools.
+        # Using vcvars64.bat for a 64-bit host environment, which is common on GitHub runners.
+        # If your build specifically needs a 32-bit native toolchain, use vcvars32.bat.
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+
+        # Now, build the Source SDK solution.
+        # The path to the solution uses backslashes for cmd compatibility.
+        msbuild.exe "${{ github.workspace }}\source-sdk-2013\src\VSSDK2013.sln" /p:Configuration=Release /p:Platform=Win32 /m
+      shell: cmd # Crucial to use cmd for vcvarsall.bat and msbuild
 
     - name: Configure CMake for Windows
       if: runner.os == 'Windows'
