@@ -12,36 +12,26 @@ runs:
       with:
         repository: alliedmodders/hl2sdk
         ref: hl2dm
-        # HL2SDK is checked out to ${{github.workspace}}/hl2sdk
         path: hl2sdk
 
-    # --- ADD THIS DEBUG STEP HERE ---
-    - name: Debug - List HL2SDK Linux32 Libraries
-      # This step should only run on Linux, as the directories are specific to Linux32 builds
-      if: runner.os == 'Linux' 
+    # --- UPDATED DEBUG STEP FOR 64-BIT (NOW NON-FAILING) ---
+    - name: Debug - List HL2SDK Linux64 Libraries
+      if: runner.os == 'Linux'
       run: |
-        echo "Listing contents of hl2sdk/lib/public/linux32:"
-        # The HL2SDK is at ${{github.workspace}}/hl2sdk
-        ls -l ${{github.workspace}}/hl2sdk/lib/public/linux32/
+        echo "Listing contents of hl2sdk/lib/public/linux64:"
+        ls -l ${{github.workspace}}/hl2sdk/lib/public/linux64/ || true # Added || true
         echo ""
-        echo "Listing contents of hl2sdk/lib/common/linux32:"
-        ls -l ${{github.workspace}}/hl2sdk/lib/common/linux32/
+        echo "Listing contents of hl2sdk/lib/common/linux64:"
+        ls -l ${{github.workspace}}/hl2sdk/lib/common/linux64/ || true # Added || true
       shell: bash
-    # --- END DEBUG STEP ---
+    # --- END UPDATED DEBUG STEP ---
 
     - name: Configure CMake
       run: |
-        # Build the base cmake command
-        # Source is at ${{github.workspace}}/${{ inputs.repo-path }}
-        # Build directory is at ${{github.workspace}}/build
         cmake_command="cmake -S \"${{github.workspace}}/${{ inputs.repo-path }}\" -B \"${{github.workspace}}/build\" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}"
         
-        # Add 32-bit flags specifically for Linux compilation
-        if [ "${{ runner.os }}" == "Linux" ]; then
-          cmake_command+=" -DCMAKE_C_FLAGS=\"-m32\" -DCMAKE_CXX_FLAGS=\"-m32\""
-        fi
+        # Removed -m32 flags for Linux (now builds 64-bit by default)
         
-        # Execute the full cmake command
         eval "$cmake_command"
       env:
         BUILD_TYPE: Release
@@ -57,12 +47,12 @@ runs:
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-linux # Reverted to original name
+        name: navmesh-plugin-linux
         path: ${{github.workspace}}/build/test/libplugin_navmesh.so
 
     - name: Upload Windows Plugin Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-windows # Reverted to original name
+        name: navmesh-plugin-windows
         path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
