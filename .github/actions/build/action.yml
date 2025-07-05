@@ -218,11 +218,25 @@ runs:
         cmake --build . --config Release
       shell: bash
 
+    # NEW DIAGNOSTIC STEP ADDED HERE
+    - name: Diagnose Windows DLL Output Path
+      if: runner.os == 'Windows'
+      run: |
+        echo "Attempting to list contents of the expected Release DLL directory:"
+        dir "${{ github.workspace }}\${{ inputs.repo-path }}\build_windows\test\Release"
+        echo "Listing all .dll files found recursively in build_windows/test/:"
+        dir "${{ github.workspace }}\${{ inputs.repo-path }}\build_windows\test\" /s /b *.dll
+        echo "Listing all .dll files found recursively in build_windows/:"
+        dir "${{ github.workspace }}\${{ inputs.repo-path }}\build_windows\" /s /b *.dll
+        echo "Current directory check (just in case):"
+        dir .\*.dll
+      shell: cmd
+
     - name: Upload Windows Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
         name: navmesh-plugin-windows
         path: |
-          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Release/*.dll # <--- MODIFIED LINE
-          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Debug/*.dll  # <--- MODIFIED LINE
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Release/*.dll
+          ${{ github.workspace }}/${{ inputs.repo-path }}/build_windows/test/Debug/*.dll
