@@ -89,7 +89,7 @@ runs:
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
     # --- Windows Specific Steps (Crucial Changes Here) ---
-    - name: Generate and Build Source SDK 2013 (Windows)
+    - name: Generate Source SDK 2013 Project Files (Windows)
       if: runner.os == 'Windows'
       run: |
         REM Set up the Visual Studio build environment (x64)
@@ -99,19 +99,52 @@ runs:
         PUSHD "${{ github.workspace }}\source-sdk-2013\src"
         
         REM Run VPC to generate project and solution files
+        echo "Running createallprojects.bat..."
         createallprojects.bat
+        IF %ERRORLEVEL% NEQ 0 (
+            echo "ERROR: createallprojects.bat failed!"
+            EXIT /B %ERRORLEVEL%
+        )
+        echo "createallprojects.bat completed."
+        
+        REM Return to the previous directory
+        POPD
+      shell: cmd
+
+    - name: Build Source SDK 2013 Libraries (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        REM Set up the Visual Studio build environment (x64) - must be called in each new shell
+        CALL "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" x64
+        
+        REM Navigate to the SDK source directory
+        PUSHD "${{ github.workspace }}\source-sdk-2013\src"
         
         REM --- Explicitly build critical missing libraries ---
         echo "Attempting to build tier1.lib explicitly..."
         msbuild tier1_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+        IF %ERRORLEVEL% NEQ 0 (
+            echo "ERROR: tier1.lib build failed!"
+            EXIT /B %ERRORLEVEL%
+        )
+        echo "tier1.lib build command completed."
         
         echo "Attempting to build mathlib.lib explicitly..."
         msbuild mathlib_win64.vcxproj /p:Configuration="Release" /p:Platform="x64" /v:d
+        IF %ERRORLEVEL% NEQ 0 (
+            echo "ERROR: mathlib.lib build failed!"
+            EXIT /B %ERRORLEVEL%
+        )
+        echo "mathlib.lib build command completed."
 
         REM Build the 'everything.sln' solution with detailed output.
-        REM Keep this for other SDK components, but the crucial ones are built above.
         echo "Attempting to build everything.sln..."
         msbuild everything.sln /p:Configuration="Release" /p:Platform="x64" /v:d
+        IF %ERRORLEVEL% NEQ 0 (
+            echo "ERROR: everything.sln build failed!"
+            EXIT /B %ERRORLEVEL%
+        )
+        echo "everything.sln build command completed."
         
         REM Return to the previous directory
         POPD
