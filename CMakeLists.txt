@@ -1,93 +1,51 @@
-cmake_minimum_required (VERSION 3.28.3)
+cmake_minimum_required(VERSION 3.10)
+project(valve_source_plugin_navmesh)
 
-project (plugin_navmesh)
+# Set common compile options and definitions
+set(my_compile_options -g -Wall)
+set(shared_defs PLUGIN_EXPORTS)
 
-set(DRIVE c CACHE STRING "User specified drive for Windows")
-set( steam_root "${DRIVE}:/Program Files (x86)/steam" )
+# Define output directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set(HL2SDK_DIR "${PROJECT_SOURCE_DIR}/../hl2sdk")
+# Define HL2SDK_DIR relative to your project's source directory
+# IMPORTANT: This path assumes hl2sdk is checked out as a sibling directory
+# to your 'valve_source_plugin_navmesh' project folder in the workspace root.
+# For example, if your workspace is /home/runner/work/your_repo/your_repo/
+# then HL2SDK would be in /home/runner/work/your_repo/hl2sdk/
+set(HL2SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../hl2sdk")
 
-set (HL2SDK_PUB_LIBS) 
-set (HL2SDK_COM_LIBS)
-
-set (mods "tf;dod;hl2mp")
-
-# Initialize shared_defs without architecture-specific defines
-set(shared_defs RAD_TELEMETRY_DISABLED $<$<CONFIG:Debug>:_DEBUG>) 
-
-# --- MODIFIED: These variables now just hold the base names of the libraries ---
-# They will be used in target_link_libraries by their base names
-set (tier1 tier1)
-set (mathlib mathlib)
-set (lzma lzma)
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	list(APPEND shared_defs __clang__)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	list(APPEND shared_defs GNUC)
+# Determine architecture-specific directory for HL2SDK libraries
+# This logic will correctly set HL2SDK_ARCH_DIR to "linux64" for 64-bit builds.
+if (CMAKE_SIZEOF_VOID_P EQUAL 8) # 64-bit
+    set(HL2SDK_ARCH_DIR "linux64") # For Linux 64-bit
+    # No -m64 or -m32 flags are needed here.
+elseif (CMAKE_SIZEOF_VOID_P EQUAL 4) # 32-bit
+    set(HL2SDK_ARCH_DIR "linux32") # For Linux 32-bit
+    # No -m32 flags here.
+else()
+    message(FATAL_ERROR "Unsupported architecture size")
 endif()
 
-if (LINUX)
-    # Determine the target architecture directory for HL2SDK libraries
-    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(HL2SDK_ARCH_DIR "linux32")
-        message(STATUS "Building for 32-bit Linux - Using HL2SDK libs from: ${HL2SDK_ARCH_DIR}")
-        list(APPEND shared_defs _LINUX LINUX POSIX) 
-    elseif (CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(HL2SDK_ARCH_DIR "linux64")
-        message(STATUS "Building for 64-bit Linux - Using HL2SDK libs from: ${HL2SDK_ARCH_DIR}")
-        list(APPEND shared_defs _LINUX LINUX POSIX PLATFORM_64BITS X64BITS)
-    else()
-        message(FATAL_ERROR "Unsupported target architecture. CMAKE_SIZEOF_VOID_P is ${CMAKE_SIZEOF_VOID_P}")
-    endif()
+# Define the paths for HL2SDK common and public libraries
+# These paths are where the *compiled* HL2SDK libraries (.a files) are expected to be.
+set(HL2SDK_COM_LIBS "${HL2SDK_DIR}/lib/common/${HL2SDK_ARCH_DIR}")
+set(HL2SDK_PUB_LIBS "${HL2SDK_DIR}/lib/public/${HL2SDK_ARCH_DIR}")
 
-    # The variables tier1, mathlib, lzma are already set to their base names above.
-    # No need for the ':libname.a' syntax here.
-	
-	set (HL2SDK_COM_LIBS ${HL2SDK_DIR}/lib/common/${HL2SDK_ARCH_DIR})
-	set (HL2SDK_PUB_LIBS ${HL2SDK_DIR}/lib/public/${HL2SDK_ARCH_DIR})
-
-	set (SRC_HOME $ENV{HOME})
-	set( steam_root "$ENV{HOME}/.steam/steam" )
-	
-    set(my_compile_options 
-        $<$<CONFIG:Debug>:-Wall> 
-        -fPIC 
-        -msse 
-        -msse2 
-        -mfpmath=sse 
-    ) 
-	set(my_link_options -static-libgcc -static-libstdc++)
-else() # Windows (assuming this is always x64 for now)
-	set (HL2SDK_PUB_LIBS ${HL2SDK_DIR}/lib/public/x64)
-	set (HL2SDK_COM_LIBS ${HL2SDK_DIR}/lib/common/x64/2015/release)
-	set(my_compile_options
-		$<$<CONFIG:>:/MT>
-		$<$<CONFIG:Debug>:/MTd>
-		$<$<CONFIG:Release>:/MT>
-	)
-	list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE 
-		_CRT_NONSTDC_NO_DEPRECATE PLATFORM_64BITS X64BITS) 
-	set(my_link_options /NODEFAULTLIB:libcmtd /SAFESEH:NO)
-endif ()
-
-# Add common include directories for the entire project
-set(shared_includes 
-    ${HL2SDK_DIR}/public 
-    ${HL2SDK_DIR}/public/tier0 
-	${HL2SDK_DIR}/public/engine 
-    ${HL2SDK_DIR}/public/tier1 
-    ${HL2SDK_DIR}/public/mathlib
-	${HL2SDK_DIR}/public/game/server  
-	${HL2SDK_DIR}/game/shared 
-    ${HL2SDK_DIR}/game/server)
-
-# Add the determined HL2SDK library directories to the linker search path
-# This is crucial for finding lib<name>.a or <name>.lib files.
+# Add these directories to the linker search path globally
 link_directories(${HL2SDK_PUB_LIBS})
 link_directories(${HL2SDK_COM_LIBS})
 
-# Add subdirectories for building their respective components
-add_subdirectory(${PROJECT_SOURCE_DIR}/util)
-add_subdirectory(${PROJECT_SOURCE_DIR}/nav_mesh)
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+# Define the base names for HL2SDK libraries (no :.a syntax)
+set(tier0 tier0)
+set(vstdlib vstdlib)
+set(tier1 tier1)
+set(mathlib mathlib)
+set(lzma lzma)
+
+# Add subdirectories for plugin and test builds
+add_subdirectory(test)
+
+# You can also add more subdirectories here if your project has them
