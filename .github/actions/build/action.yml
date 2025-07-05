@@ -11,7 +11,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: alliedmodders/hl2sdk
-        ref: hl2dm # This was already corrected, keeping it
+        ref: hl2dm
         path: hl2sdk
 
     - name: Configure CMake
@@ -26,22 +26,22 @@ runs:
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
       shell: bash
 
-    # --- CORRECTED ARTIFACT UPLOAD STEPS ---
+    # --- CORRECTED ARTIFACT UPLOAD STEPS (with unique names) ---
 
     - name: Upload Linux Plugin Artifact
       if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-linux # Name for the downloadable zip
-        # This is the CORRECTED path for Linux:
+        # **CRITICAL CHANGE HERE:** Add ${{ github.run_id }} to make the name unique
+        name: navmesh-plugin-linux-${{ github.run_id }}
         path: ${{github.workspace}}/build/test/libplugin_navmesh.so
 
     - name: Upload Windows Plugin Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
-        name: navmesh-plugin-windows # Name for the downloadable zip
-        # This is the CORRECTED path for Windows:
+        # **CRITICAL CHANGE HERE:** Add ${{ github.run_id }} to make the name unique
+        name: navmesh-plugin-windows-${{ github.run_id }}
         path: ${{github.workspace}}/build/test/Release/plugin_navmesh.dll
 
     # --- END CORRECTED ARTIFACT UPLOAD STEPS ---
