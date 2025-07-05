@@ -89,7 +89,17 @@ runs:
         path: ${{ github.workspace }}/${{ inputs.repo-path }}/build_linux/*.so
 
     # --- Windows Specific Steps ---
-    - name: Build Source SDK 2013 Libraries (Windows) # <-- UNCOMMENTED THIS
+    - name: Generate Source SDK 2013 Solution (Windows) # <-- NEW STEP ADDED HERE
+      if: runner.os == 'Windows'
+      run: |
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && (
+            pushd "${{ github.workspace }}\source-sdk-2013\src" && (
+                createallprojects.bat
+            ) && popd
+        )
+      shell: cmd
+
+    - name: Build Source SDK 2013 Libraries (Windows)
       if: runner.os == 'Windows'
       run: |
         REM Set up the Visual Studio build environment and then run MSBuild
@@ -100,7 +110,7 @@ runs:
         )
       shell: cmd
 
-    - name: Configure CMake for Windows # <-- UNCOMMENTED THIS
+    - name: Configure CMake for Windows
       if: runner.os == 'Windows'
       run: |
         # Ensure you are in your plugin's directory for CMake configuration
@@ -118,7 +128,7 @@ runs:
           .. # Point to the parent directory where your CMakeLists.txt resides
       shell: bash
 
-    - name: Build with CMake for Windows # <-- UNCOMMENTED THIS
+    - name: Build with CMake for Windows
       if: runner.os == 'Windows'
       run: |
         # Navigate to the build directory created in the previous step
@@ -128,7 +138,7 @@ runs:
         cmake --build . --config Release
       shell: bash
 
-    - name: Upload Windows Artifact # <-- UNCOMMENTED THIS
+    - name: Upload Windows Artifact
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v4
       with:
