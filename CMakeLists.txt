@@ -60,11 +60,7 @@ if (LINUX)
 
 else() # This block applies to Windows
     # Windows specific SDK library paths
-    # BASED ON YOUR LOG: The libraries are directly under x64, not in a Release/Debug subfolder.
     set(SDK_PUBLIC_LIB_PATH "${HL2SDK_DIR}/src/lib/public/${CMAKE_VS_PLATFORM_NAME}")
-    
-    # !!! ADDING THIS PATH BASED ON YOUR LOG !!!
-    # It appears some common libs like tier1 and mathlib might be output here.
     set(SDK_COMMON_LIB_PATH "${HL2SDK_DIR}/src/lib/common/${CMAKE_VS_PLATFORM_NAME}/2015/release") 
 
     set(my_compile_options
@@ -75,28 +71,29 @@ else() # This block applies to Windows
     list(APPEND shared_defs COMPILER_MSVC COMPILER_MSVC64 _CRT_NO_VA_START_VALIDATION _CRT_SECURE_NO_DEPRECATE
         _CRT_NONSTDC_NO_DEPRECATE)
     
-    # --- MODIFIED: Explicitly setting linker paths for Windows ---
-    set(my_link_options "/NODEFAULTLIB:libcmtd /SAFESEH:NO /LIBPATH:${SDK_PUBLIC_LIB_PATH} /LIBPATH:${SDK_COMMON_LIB_PATH}")
+    # --- MODIFIED: Removed /LIBPATH from my_link_options. It will be handled by target_link_directories. ---
+    set(my_link_options "/NODEFAULTLIB:libcmtd /SAFESEH:NO")
 endif ()
 
 
 # Add source files from subdirectories
-# CMake's 'include_directories' command above makes these paths available globally.
-# However, for stricter modern CMake, you'd use target_include_directories on each specific target,
-# passing ${shared_includes} to them. For now, this global include_directories should work.
 add_subdirectory(${PROJECT_SOURCE_DIR}/util)
 add_subdirectory(${PROJECT_SOURCE_DIR}/nav_mesh)
 add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 
-# --- Find and Link Source SDK Libraries ---
+# --- NEW: Use target_link_directories for more explicit linker paths associated with the target ---
+target_link_directories(plugin_navmesh PUBLIC
+    "${SDK_PUBLIC_LIB_PATH}"
+    "${SDK_COMMON_LIB_PATH}"
+)
 
-# --- COMMENTED OUT: Explicit /LIBPATH is now used in my_link_options ---
+# --- COMMENTED OUT: The old link_directories is no longer needed as target_link_directories is used ---
 # link_directories(
 #     "${SDK_PUBLIC_LIB_PATH}"
 #     "${SDK_COMMON_LIB_PATH}" # Now includes the new common path
 # )
 
-# Find specific SDK libraries
+# Find specific SDK libraries (these will find the full paths)
 find_library(TIER0_LIB tier0 PATHS "${SDK_PUBLIC_LIB_PATH}" "${SDK_COMMON_LIB_PATH}" NO_DEFAULT_PATH)
 find_library(TIER1_LIB tier1 PATHS "${SDK_PUBLIC_LIB_PATH}" "${SDK_COMMON_LIB_PATH}" NO_DEFAULT_PATH)
 find_library(VSTDLIB_LIB vstdlib PATHS "${SDK_PUBLIC_LIB_PATH}" "${SDK_COMMON_LIB_PATH}" NO_DEFAULT_PATH)
@@ -122,7 +119,7 @@ if(NOT LZMA_LIB)
     message(FATAL_ERROR "Could not find lzma library. Searched in: ${SDK_COMMON_LIB_PATH}")
 endif()
 
-# --- NEW: Apply the custom link options to your target ---
+# Apply the custom link options (only /NODEFAULTLIB and /SAFESEH:NO for Windows)
 target_link_options(plugin_navmesh PUBLIC ${my_link_options})
 
 target_link_libraries(
